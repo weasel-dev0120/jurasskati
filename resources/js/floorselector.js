@@ -505,10 +505,15 @@ export default function FloorSelector() {
             }
         }
 
-        // REMOVED: Inline height setting - CSS handles height via min-height and aspect-ratio
-        // The inline height was causing layout issues and is not needed since CSS
-        // already provides proper responsive sizing with min-height and aspect-ratio rules.
-        // Clear any existing inline height that might have been set previously
+        // REMOVED: Auto-sizing container height
+        // The container should size naturally based on CSS (min-height, aspect-ratio, content)
+        // Setting fixed height via JS causes layout issues and prevents natural sizing
+        // CSS handles sizing via:
+        //   - min-height: 28.3333333333rem (680px)
+        //   - aspect-ratio: 1440/790 (on xl screens)
+        //   - Content-based height (natural flow)
+        
+        // If you need to clear any previously set inline height:
         let floorsContainer = document.querySelector('.js-floors');
         if (floorsContainer && floorsContainer.style.height) {
             floorsContainer.style.height = '';
