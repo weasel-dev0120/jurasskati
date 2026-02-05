@@ -1,0 +1,74 @@
+@import 'public/variables';
+@import 'public/bootstrap';
+@import 'public/html5video';
+@import 'navbar';
+@import 'public/errors';
+@import 'public/skip-to-content';
+
+@import 'public/lang-switcher';
+
+@import 'public/primary-nav';
+@import 'public/social-nav';
+@import 'public/footer-nav';
+@import 'public/legal-nav';
+
+@import 'public/header';
+
+@import 'public/page';
+@import 'public/section-default';
+@import 'public/share-links';
+@import 'public/pagination';
+@import 'public/document-list';
+@import 'public/image-list';
+
+@import 'public/footer';
+@import 'public/anchor-top';
+
+@import 'public/swiper';
+@import 'public/gmaps';
+@import 'public/navbar-hide-left-button';
+
+table {
+    @extend .table;
+}
+
+figure {
+    @extend .figure;
+    img {
+        @extend .figure-img;
+    }
+    figcaption {
+        @extend .figure-caption;
+    }
+}
+
+blockquote {
+    color: $gray-700;
+    border-left: 5px solid $gray-300;
+    padding: 18px 25px 18px 22px;
+    background-color: $gray-100;
+    quotes: '\201C''\201D''\2018''\2019';
+    &:before {
+        color: #ccc;
+        content: open-quote;
+        font-size: 4em;
+        line-height: 0.1em;
+        vertical-align: -0.4em;
+        margin-left: -0.5rem;
+    }
+}
+
+.rich-content {
+    img {
+        @include img-fluid;
+    }
+    img,
+    figure {
+        &[style*='float:left'] {
+            margin-right: 20px;
+        }
+        &[style*='float:right'] {
+            margin-left: 20px;
+        }
+    }
+}

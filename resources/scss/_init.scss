@@ -1,0 +1,169 @@
+@use "sass:math";
+
+@import "ress";
+@import "bootstrap-grid";
+@import "system-font";
+
+@mixin xxxl {
+  @media (min-width: 1920px) {
+    @content;
+  }
+}
+
+@mixin xxl {
+  @media (min-width: 1600px) {
+    @content;
+  }
+}
+
+@mixin xl {
+  @media (min-width: 1200px) {
+    @content;
+  }
+}
+
+@mixin lg {
+  @media (min-width: 992px) {
+    @content;
+  }
+}
+
+@mixin md {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin sm {
+  @media (min-width: 576px) {
+    @content;
+  }
+}
+
+@mixin xs {
+  @media (max-width: 575px) {
+    @content;
+  }
+}
+
+@mixin landscape {
+  @media (orientation: landscape) {
+    @content;
+  }
+}
+
+@mixin portrait {
+  @media (orientation: portrait) {
+    @content;
+  }
+}
+
+.clearfix:before,
+.clearfix:after {
+  content: "";
+  display: table;
+  line-height: 0;
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+.clearfix {
+  *zoom: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+.invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+:root {
+  font-size: $baseFontSize;
+}
+
+:root,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol {
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.rel {
+  position: relative;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+$breakpoints: 'xs', 'sm', 'md', 'lg', 'xl', 'xxl', 'xxxl';
+$alignValues: left, right, center;
+
+@each $alignValue in $alignValues {
+  .text-xs-#{$alignValue} { @include xs { text-align: #{$alignValue}; } }
+  .text-sm-#{$alignValue} { @include sm { text-align: #{$alignValue}; } }
+  .text-md-#{$alignValue} { @include md { text-align: #{$alignValue}; } }
+  .text-lg-#{$alignValue} { @include lg { text-align: #{$alignValue}; } }
+  .text-xl-#{$alignValue} { @include xl { text-align: #{$alignValue}; } }
+  .text-xxl-#{$alignValue} { @include xxl { text-align: #{$alignValue}; } }
+  .text-xxxl-#{$alignValue} { @include xxxl { text-align: #{$alignValue}; } }
+}
+
+@function getEm($pxValue, $pxBase) {
+  @return math.div($pxValue, $pxBase) * 1em;
+  // @return $pxValue / $pxBase * 1em;
+}
+
+@function getRem($pxValue, $pxBase: $baseFontSize) {
+  @return math.div($pxValue, $pxBase) * 1rem;
+  // @return $pxValue / $pxBase * 1em;
+}
+
+@mixin fontface($fontname, $filename) {
+  font-family: $fontname;
+  src: url("../fonts/#{$filename}.woff") format("woff"), url("../fonts/#{$filename}.ttf") format("truetype");
+  font-display: swap;
+
+  @content;
+}

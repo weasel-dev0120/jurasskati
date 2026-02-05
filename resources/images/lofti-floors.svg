@@ -1,0 +1,10 @@
+<svg width="1440" height="790" viewBox="0 0 1440 790" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="lofti-floors">
+<g id="floor-2" style="mix-blend-mode:hard-light">
+<path d="M1046 335L545.5 308.5V366L1046 419.5V410.5L1330.5 362V313.5L1046 335Z" fill="#99B3D2" fill-opacity="0.8"/>
+</g>
+<g id="floor-1" style="mix-blend-mode:hard-light">
+<path d="M1373.5 389L1440 374.5V449L1393.5 470.5V482.5L1344.5 507L1323.5 501.5L1198 544V504L1163 498.5L1121 512.5V547.5L1101.5 555L586 445L511.5 453L496 450.5V534.5L0 633.5V480L496 425.5L367.5 396.5L601.5 372L1046 419.5V413.5L1200 426.5L1326 401V409L1384 413.5L1431 401V393.5L1373.5 389Z" fill="#99B3D2" fill-opacity="0.7"/>
+</g>
+</g>
+</svg>

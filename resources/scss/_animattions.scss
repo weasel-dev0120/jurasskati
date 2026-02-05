@@ -1,0 +1,149 @@
+@keyframes cloud1 {
+  from {
+    transform: translateX(-15px);
+  }
+
+  to {
+    transform: translateX(20px);
+  }
+}
+
+@keyframes cloud2 {
+  from {
+    transform: translateX(-10px);
+  }
+
+  to {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes cloud3 {
+  from {
+    transform: translateX(10px);
+  }
+
+  to {
+    transform: translateX(-10px);
+  }
+}
+
+@keyframes mandog {
+  from {
+    transform: translateX(-30vw);
+  }
+
+  to {
+    transform: translateX(90vw);
+  }
+}
+
+@keyframes womancycle {
+  from {
+    transform: translateX(30vw);
+  }
+
+  to {
+    transform: translateX(-90vw);
+  }
+}
+
+@keyframes citymenu {
+  from {
+    color: $cLightBlue;
+  }
+
+  to {
+    color: $cOrange;
+  }
+}
+
+@keyframes bulbflicker {
+  0% {
+    opacity: 0.25;
+  }
+
+  13% {
+    opacity: 0.25;
+  }
+
+  14% {
+    opacity: 0.4;
+  }
+
+  15% {
+    opacity: 0.25;
+  }
+
+  65% {
+    opacity: 0.25;
+  }
+
+  66% {
+    opacity: 0.4;
+  }
+
+  67% {
+    opacity: 0.25;
+  }
+
+  100% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes counter {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  10% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+
+  20% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes counter-first {
+  0% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+
+  10% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes counter-last {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  10% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}

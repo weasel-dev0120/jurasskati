@@ -1,0 +1,163 @@
+.reserve-button {
+    background-color: #A8692C;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    color: #FFFFFF;
+    /*padding: 20px 21px 13px 18px;
+    line-height: 14px;*/
+    padding: 5px;
+    font-size: 12px;
+    border-radius: 100px;
+    float: right;
+    /*margin: -11px 0px 0 0px;*/
+    text-transform: uppercase;
+    text-decoration: none;
+    
+    }  
+    
+.flat-reserve {
+
+    margin-left: 21.083333rem;
+    margin-bottom: 3.053333rem;
+    padding-top: 8em;
+    padding-bottom: 0em;
+    width: 13.3333333333rem;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    
+}
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 414px) 
+  and (max-device-width: 736px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+  
+  .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+  
+  .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+
+@media only screen 
+     and (device-width: 390px) 
+     and (device-height: 844px) 
+     and (-webkit-device-pixel-ratio: 3) {
+     
+     .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+
+@media only screen 
+      and (device-width: 428px) 
+      and (device-height: 926px) 
+      and (-webkit-device-pixel-ratio: 3) {
+     
+     .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+
+@media only screen 
+      and (width: 393px) 
+      and (device-height: 852px)
+      and (-webkit-device-pixel-ratio: 3) {
+     
+     .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+
+
+@media all and (device-width: 768px) and (device-height: 1024px) and (orientation:portrait) {
+  .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+@media all and (device-width: 1024px) and (device-height: 768px) and (orientation:landscape) {
+  .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+}
+
+@media only screen 
+  and (min-width: 1024px) 
+  and (max-height: 1366px) 
+  and (-webkit-min-device-pixel-ratio: 1.5) {
+  
+  .js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+	   
+}
+
+
+
+if (navigator.userAgent.includes("Safari") && navigator.userAgent.includes("Mobile")) { 
+
+.js-reserveform input[type="radio"] {
+	   	    display: inline-block;
+		    margin-top: 5px;
+		    width: auto;
+	   }
+
+ }
+
+
+.js-reserveform input[type="radio"]{
+	appearance: none;
+	padding: 0;
+}
+
+.js-reserveform input[type="radio"]:hover{
+	cursor: pointer;
+}
+
+.js-reserveform input[type="radio"]:before{
+	content: '';
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	border: none;
+	background: #eee;
+}
+
+.js-reserveform input[type="radio"]:checked:before{
+	background: radial-gradient(blue 40%, #eee 50%);
+}
+
+
+
+
+
+
+
