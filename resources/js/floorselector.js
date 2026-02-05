@@ -125,10 +125,21 @@ export default function FloorSelector() {
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
         
-        return {
+        const dimensions = {
             width: Math.max(300, windowWidth - deltaWidth), // Minimum 300px width
             height: Math.max(300, windowHeight - deltaHeight) // Minimum 300px height
         };
+        
+        console.log('[FloorPlan] Calculating dimensions:', {
+            windowWidth: windowWidth,
+            windowHeight: windowHeight,
+            deltaWidth: deltaWidth,
+            deltaHeight: deltaHeight,
+            calculatedWidth: dimensions.width,
+            calculatedHeight: dimensions.height
+        });
+        
+        return dimensions;
     }
 
     /**
@@ -139,9 +150,22 @@ export default function FloorSelector() {
      * @param {number} deltaHeight - Delta for height calculation (default: 150px)
      */
     function applyFloorplanAutoFit(floorplanElement, deltaWidth = 300, deltaHeight = 150) {
-        if (!floorplanElement) return;
+        if (!floorplanElement) {
+            console.warn('[FloorPlan] applyFloorplanAutoFit: floorplanElement is null or undefined');
+            return;
+        }
         
         const dimensions = calculateFloorplanDimensions(deltaWidth, deltaHeight);
+        const elementType = floorplanElement.tagName.toLowerCase();
+        const className = floorplanElement.className || 'unknown';
+        
+        console.log('[FloorPlan] Applying auto-fit to element:', {
+            elementType: elementType,
+            className: className,
+            dimensions: dimensions,
+            deltaWidth: deltaWidth,
+            deltaHeight: deltaHeight
+        });
         
         // Apply dimensions using pixel values (window size - delta)
         floorplanElement.style.width = dimensions.width + 'px';
@@ -152,14 +176,21 @@ export default function FloorSelector() {
         floorplanElement.style.transformOrigin = 'center center';
         
         // Maintain aspect ratio - use contain to fit within bounds
-        if (floorplanElement.tagName.toLowerCase() === 'img') {
+        if (elementType === 'img') {
             floorplanElement.style.objectFit = 'contain';
-        } else if (floorplanElement.tagName.toLowerCase() === 'svg') {
+        } else if (elementType === 'svg') {
             // For SVG, preserve aspect ratio by setting viewBox if not already set
             if (!floorplanElement.getAttribute('preserveAspectRatio')) {
                 floorplanElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
             }
         }
+        
+        console.log('[FloorPlan] Auto-fit applied successfully. Final styles:', {
+            width: floorplanElement.style.width,
+            height: floorplanElement.style.height,
+            maxWidth: floorplanElement.style.maxWidth,
+            maxHeight: floorplanElement.style.maxHeight
+        });
     }
 
     function hideAllFloorplans() {
@@ -264,7 +295,9 @@ export default function FloorSelector() {
     }
 
     function doAction(target) {
+        console.log('[FloorPlan] doAction called with target:', target);
         let targetPath = target.split('-');
+        console.log('[FloorPlan] Parsed targetPath:', targetPath);
 
         // if (targetIsFlatInPlan(ev.target)) {
         //     if (targetPath[1]) {
@@ -317,21 +350,33 @@ export default function FloorSelector() {
                 let closeLinkElem = document.querySelector(closeLinkQuery);
                 closeLinkElem.dataset.target = floorTarget;
             } else {
+                console.log('[FloorPlan] Opening floor plan:', {
+                    target: target,
+                    targetPath: targetPath,
+                    floorPlanClass: targetPath[1]
+                });
+                
                 document.querySelector('.js-floors').classList.remove('has-second-floor');
                 
                 // Reset all floorplan transforms before switching to prevent zoom issues
                 let allFloorplans = visualBlock.querySelectorAll('.floorplan');
+                console.log('[FloorPlan] Resetting', allFloorplans.length, 'existing floor plans');
                 allFloorplans.forEach(function(floorplan) {
                     floorplan.style.transform = 'none';
                     floorplan.style.transformOrigin = 'center center';
                 });
                 
-                // console.log(targetPath[1]);
                 replaceFloorplanSvg(targetPath[1]);
                 let targetFloorplan =
                     visualBlock.querySelector('.floorplan.' + targetPath[1]);
                 
                 if (targetFloorplan) {
+                    console.log('[FloorPlan] Target floor plan found:', {
+                        element: targetFloorplan,
+                        tagName: targetFloorplan.tagName,
+                        className: targetFloorplan.className
+                    });
+                    
                     // Calculate delta values (adjust these as needed)
                     // deltaWidth accounts for sidebar (260px) + margins (40px) = ~300px
                     // deltaHeight accounts for header + margins = ~150px
@@ -342,6 +387,9 @@ export default function FloorSelector() {
                     applyFloorplanAutoFit(targetFloorplan, deltaWidth, deltaHeight);
                     
                     targetFloorplan.classList.add('active');
+                    console.log('[FloorPlan] Floor plan activated:', targetPath[1]);
+                } else {
+                    console.warn('[FloorPlan] Target floor plan not found for class:', targetPath[1]);
                 }
                 
                 let matches = targetPath[1].match(/[a-z](\d+)/);
@@ -393,6 +441,7 @@ export default function FloorSelector() {
             resizeTimeout = setTimeout(function() {
                 const activeFloorplan = visualBlock.querySelector('.floorplan.active');
                 if (activeFloorplan) {
+                    console.log('[FloorPlan] Window resized, updating active floor plan dimensions');
                     const deltaWidth = 300;
                     const deltaHeight = 150;
                     applyFloorplanAutoFit(activeFloorplan, deltaWidth, deltaHeight);
@@ -653,9 +702,12 @@ export default function FloorSelector() {
     });
 
     function replaceFloorplanSvg(targetClass) {
+        console.log('[FloorPlan] replaceFloorplanSvg called for:', targetClass);
+        
         // Check if SVG was already replaced - if so, skip replacement
         var existingSvg = document.querySelector('svg.floorplan.' + targetClass);
         if (existingSvg) {
+            console.log('[FloorPlan] SVG already exists, applying auto-fit to existing SVG');
             // SVG already exists, apply auto-fitting dimensions
             const deltaWidth = 300;
             const deltaHeight = 150;
@@ -665,6 +717,7 @@ export default function FloorSelector() {
         }
 
         var svgImages = document.querySelectorAll('img.floorplan.' + targetClass);
+        console.log('[FloorPlan] Found', svgImages.length, 'image(s) to replace for class:', targetClass);
 
         [].forEach.call(svgImages, function(img) {
             // Skip if this image was already replaced (shouldn't happen, but safety check)
@@ -709,7 +762,9 @@ export default function FloorSelector() {
                     });
                     svg.setAttribute('role', 'img');
                     
+                    console.log('[FloorPlan] Replacing img with SVG for:', targetClass);
                     img.parentNode.replaceChild(svg, img);
+                    console.log('[FloorPlan] SVG replacement completed');
                     
                     // Apply auto-fitting dimensions after SVG replacement
                     const deltaWidth = 300;
@@ -717,6 +772,7 @@ export default function FloorSelector() {
                     applyFloorplanAutoFit(svg, deltaWidth, deltaHeight);
                     
                     markUnavailableOnFloorplans();
+                    console.log('[FloorPlan] SVG replacement and auto-fit completed for:', targetClass);
                 }
 
             }
