@@ -415,10 +415,10 @@
 
             /*Set height for container*/
 
-            if(document.querySelector('.slide.active.apt')){
-              let contentHeight = document.querySelector('.slide.active').offsetHeight + 150;
-              document.querySelector('.js-floors').style.height = `${contentHeight}px`;
-            }
+            // if(document.querySelector('.slide.active.apt')){
+            //   let contentHeight = document.querySelector('.slide.active').offsetHeight + 150;
+            //   document.querySelector('.js-floors').style.height = `${contentHeight}px`;
+            // }
             
           }
           function onActionClick(ev) {
