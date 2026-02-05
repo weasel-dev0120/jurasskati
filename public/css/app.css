@@ -3901,7 +3901,7 @@ a {
 .js-floors .loft .aptplan .plan {
   position: absolute;
   top: 0%;
-  left: -45%;
+  left: 0%;
   width: 160%;
   height: 60%;
   -o-object-fit: contain;
