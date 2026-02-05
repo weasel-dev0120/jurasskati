@@ -372,6 +372,8 @@ a {
 
 .js-floors {
     position: relative;
+    // Keep any (inlined) SVG floorplans from forcing horizontal page scroll.
+    overflow-x: hidden;
     min-height: getRem(680px);
     &.has-second-floor {
         min-height: getRem(1020px);
@@ -664,8 +666,12 @@ a {
                 pointer-events: all;
             }
 
+            // IMPORTANT: floorplans are converted from <img> to inline <svg> by replaceFloorplanSvg().
+            // Size both the same way to avoid "zoom" changes when switching floors/flats.
             width: 100%;
-            max-height: 100%;
+            height: auto;
+            max-width: 100%;
+            max-height: calc(90vh - #{$szHeaderHeight});
             @include md {
                 margin-right: getRem(40px);
                 width: 100%;
@@ -687,53 +693,14 @@ a {
             //     max-height: getRem(497px / 0.75);
             // }
 
-            @include md {
-                transform-origin: 70% 20%;
-                transform: scale(2.5);
-            }
-            @include lg {
-                transform-origin: center center;
-                transform: scale(1);
-            }
+            transform: none;
+        }
 
-            &.l1 {
-                transform: scale(0.9);
-                @include md {
-                    transform-origin: 70% 0%;
-                    transform: scale(2.5);
-                }
-                @include lg {
-                    transform-origin: center center;
-                    transform: scale(1);
-                }
-                @include xl {
-                    transform-origin: top center;
-                    transform: scale(1.1);
-                }
-                @include xxl {
-                    transform-origin: top center;
-                    transform: scale(1.2);
-                }
-            }
-            &.l2 {
-                transform: scale(0.9);
-                @include md {
-                    transform-origin: top right;
-                    transform: scale(2.5);
-                }
-                @include lg {
-                    transform-origin: 100% 50%;
-                    transform: scale(1.3);
-                }
-                // @include xl {
-                //     transform-origin: 100% 40%;
-                //     transform: scale(1.4);
-                // }
-                @include xxl {
-                    transform-origin: 100% 40%;
-                    transform: scale(1.4);
-                }
-            }
+        img.floorplan,
+        svg.floorplan {
+            display: block;
+            width: 100%;
+            height: auto;
         }
 
     }
@@ -770,6 +737,13 @@ a {
                 opacity: 1;
                 pointer-events: all;
             }
+
+            @media (max-width: 1199.98px) {
+                height: auto;
+                // Allow vertical growth on smaller screens, but never allow horizontal overflow.
+                overflow-y: visible;
+                overflow-x: hidden;
+            }
             // @include md {
             //     max-width: getRem(722px / 2);
             //     max-height: getRem(497px / 2);
@@ -790,17 +764,17 @@ a {
             &.has-second-floor {
                 .plan {
                     opacity: 1;
-                    height: 33%;
                     @include lg {
                         height: 50%;
                     }
                 }
 
                 .plan:first-of-type {
-                    top: 0;
+                    @include lg {
+                        top: 0;
+                    }
                 }
                 .plan:last-of-type {
-                    top: 33%;
                     @include lg {
                         top: 50%;
                     }
@@ -817,6 +791,16 @@ a {
                 pointer-events: none;
                 transition: opacity 500ms;
                 display: block;
+
+                @media (max-width: 1199.98px) {
+                    position: relative;
+                    top: auto;
+                    left: auto;
+                    width: 100%;
+                    height: auto;
+                    margin: 0 auto;
+                }
+
                 @include lg {
                     top: 0;
                     left: 0;
@@ -835,6 +819,13 @@ a {
                     object-fit: contain;
                     top: 0;
                     left: 0;
+
+                    @media (max-width: 1199.98px) {
+                        position: relative;
+                        height: auto;
+                        max-height: 75vh;
+                        display: block;
+                    }
                 }
             }
 
@@ -1011,17 +1002,9 @@ a {
     .loft {
         .aptplan {
             .plan {
-                position: absolute;
-                top: 0%;
-                left: -45%;
-                width: 160%;
-                height: 60%;
-                object-fit: contain;
-                @include md {
-                    top: 0;
-                    left: 200px;
-                    width: calc(100% - 200px);
-                    height: 100%;
+                @include xl {
+                    left: getRem(200px);
+                    width: calc(100% - #{getRem(200px)});
                 }
             }
         }

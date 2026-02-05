@@ -71,21 +71,36 @@ export default function FloorSelector() {
         //     return;
         flatInfoPopup.style.left = left + 'px';
         flatInfoPopup.style.top = top + 'px';
-        // console.log(top, flatInfoPopup.clientHeight);
-        // let left = rect.x + Math.round(rect.width / 2);
-        if (top-100 < flatInfoPopup.clientHeight) {
-        // if (rect.y < flatInfoPopup.clientHeight) {
-            flatInfoPopup.style.left = left + 'px';
-            flatInfoPopup.style.top =
-                top + 'px';
-                // (rect.y + rect.height + window.scrollY) + 'px';
-            flatInfoPopup.classList.add('bottom');
-        } else {
-            flatInfoPopup.style.left = left + 'px';
-            flatInfoPopup.style.top =
-                top + 'px';
-                // (rect.y + window.scrollY) + 'px';
-            flatInfoPopup.classList.remove('bottom');
+
+        // If we are too close to the top, show the popup below the pointer.
+        // Otherwise show it above (default).
+        flatInfoPopup.classList.toggle('bottom', top - 100 < flatInfoPopup.clientHeight);
+
+        // Clamp the popup inside the viewport to avoid triggering horizontal scrollbars
+        // (transforms are included in getBoundingClientRect()).
+        const margin = 8;
+        const rect = flatInfoPopup.getBoundingClientRect();
+        let adjustedLeft = left;
+        let adjustedTop = top;
+
+        if (rect.left < margin) {
+            adjustedLeft += margin - rect.left;
+        }
+        if (rect.right > window.innerWidth - margin) {
+            adjustedLeft -= rect.right - (window.innerWidth - margin);
+        }
+        if (rect.top < margin) {
+            adjustedTop += margin - rect.top;
+        }
+        if (rect.bottom > window.innerHeight - margin) {
+            adjustedTop -= rect.bottom - (window.innerHeight - margin);
+        }
+
+        if (adjustedLeft !== left) {
+            flatInfoPopup.style.left = adjustedLeft + 'px';
+        }
+        if (adjustedTop !== top) {
+            flatInfoPopup.style.top = adjustedTop + 'px';
         }
     }
 
