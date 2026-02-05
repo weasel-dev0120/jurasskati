@@ -505,23 +505,14 @@ export default function FloorSelector() {
             }
         }
 
-        // Set height for container (auto-sizing for apartment slides)
-        if(document.querySelector('.slide.active.apt')){
-            let activeSlide = document.querySelector('.slide.active.apt');
-            if (activeSlide) {
-                // Use setTimeout to ensure DOM has updated after SVG replacement
-                setTimeout(function() {
-                    // Calculate container height based on window height minus delta
-                    const deltaHeight = 150;
-                    const windowHeight = window.innerHeight;
-                    const containerHeight = Math.max(400, windowHeight - deltaHeight);
-                    
-                    let floorsContainer = document.querySelector('.js-floors');
-                    if (floorsContainer) {
-                        floorsContainer.style.height = containerHeight + 'px';
-                    }
-                }, 100);
-            }
+        // REMOVED: Inline height setting - CSS handles height via min-height and aspect-ratio
+        // The inline height was causing layout issues and is not needed since CSS
+        // already provides proper responsive sizing with min-height and aspect-ratio rules.
+        // Clear any existing inline height that might have been set previously
+        let floorsContainer = document.querySelector('.js-floors');
+        if (floorsContainer && floorsContainer.style.height) {
+            floorsContainer.style.height = '';
+            console.log('[FloorPlan] Cleared inline height from .js-floors container');
         }
         
         // Handle window resize to update floor plan dimensions
