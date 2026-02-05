@@ -2208,3 +2208,25 @@ html[lang="ru"] .js-flats-table.js-flats-table.js-flats-table thead {
         font-size: 0.45rem;
     }
 }
+
+/* FIX: Floorplan should never overflow / zoom - prevent transform accumulation */
+.js-floors .afloors .floorplan,
+.js-floors .lfloors .floorplan,
+.js-floors .apt .floorplan,
+.js-floors .loft .floorplan {
+    transform: none !important;
+    transform-origin: center center !important;
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* If inline SVG is used */
+.js-floors .afloors .floorplan svg,
+.js-floors .lfloors .floorplan svg,
+.js-floors .apt .floorplan svg,
+.js-floors .loft .floorplan svg {
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+    transform: none !important;
+}

@@ -119,6 +119,9 @@ export default function FloorSelector() {
         let allSlides = visualBlock.querySelectorAll('.floorplan');
         allSlides.forEach((slide) => {
             slide.classList.remove('active');
+            // Reset transforms when hiding to prevent zoom accumulation
+            slide.style.transform = 'none';
+            slide.style.transformOrigin = 'center center';
         });
     }
 
@@ -268,11 +271,34 @@ export default function FloorSelector() {
                 closeLinkElem.dataset.target = floorTarget;
             } else {
                 document.querySelector('.js-floors').classList.remove('has-second-floor');
+                
+                // Reset all floorplan transforms before switching to prevent zoom issues
+                let allFloorplans = visualBlock.querySelectorAll('.floorplan');
+                allFloorplans.forEach(function(floorplan) {
+                    floorplan.style.transform = 'none';
+                    floorplan.style.transformOrigin = 'center center';
+                    if (floorplan.tagName.toLowerCase() === 'svg') {
+                        floorplan.style.width = '100%';
+                        floorplan.style.height = 'auto';
+                    }
+                });
+                
                 // console.log(targetPath[1]);
                 replaceFloorplanSvg(targetPath[1]);
                 let targetFloorplan =
                     visualBlock.querySelector('.floorplan.' + targetPath[1]);
-                targetFloorplan.classList.add('active');
+                
+                if (targetFloorplan) {
+                    // Ensure the target floorplan has no transform issues
+                    targetFloorplan.style.transform = 'none';
+                    targetFloorplan.style.transformOrigin = 'center center';
+                    if (targetFloorplan.tagName.toLowerCase() === 'svg') {
+                        targetFloorplan.style.width = '100%';
+                        targetFloorplan.style.height = 'auto';
+                    }
+                    targetFloorplan.classList.add('active');
+                }
+                
                 let matches = targetPath[1].match(/[a-z](\d+)/);
                 if (matches && matches[1]) {
                     let floorInt = parseInt(matches[1]);
@@ -292,6 +318,21 @@ export default function FloorSelector() {
                 resetAndFilterTableByFloor(-1, -1, 'loft');
             } else if (target == 'apartments') {
                 resetAndFilterTableByFloor(-1, -1, 'apartment');
+            }
+        }
+
+        // Set height for container (auto-sizing for apartment slides)
+        if(document.querySelector('.slide.active.apt')){
+            let activeSlide = document.querySelector('.slide.active.apt');
+            if (activeSlide) {
+                // Use setTimeout to ensure DOM has updated after SVG replacement
+                setTimeout(function() {
+                    let contentHeight = activeSlide.offsetHeight + 150;
+                    let floorsContainer = document.querySelector('.js-floors');
+                    if (floorsContainer) {
+                        floorsContainer.style.height = contentHeight + 'px';
+                    }
+                }, 100);
             }
         }
     }
@@ -542,9 +583,24 @@ export default function FloorSelector() {
     });
 
     function replaceFloorplanSvg(targetClass) {
+        // Check if SVG was already replaced - if so, skip replacement
+        var existingSvg = document.querySelector('svg.floorplan.' + targetClass);
+        if (existingSvg) {
+            // SVG already exists, just ensure it's properly styled
+            existingSvg.style.transform = 'none';
+            existingSvg.style.width = '100%';
+            existingSvg.style.height = 'auto';
+            markUnavailableOnFloorplans();
+            return;
+        }
+
         var svgImages = document.querySelectorAll('img.floorplan.' + targetClass);
 
         [].forEach.call(svgImages, function(img) {
+            // Skip if this image was already replaced (shouldn't happen, but safety check)
+            if (img.tagName.toLowerCase() !== 'img') {
+                return;
+            }
 
             var attributes = img.attributes;
             var request = new XMLHttpRequest();
@@ -552,9 +608,19 @@ export default function FloorSelector() {
             request.onload = function () {
 
                 if(request.status >= 200 && request.status < 400) {
+                    // Double-check the img still exists and hasn't been replaced
+                    if (!img.parentNode || img.tagName.toLowerCase() !== 'img') {
+                        return;
+                    }
+
                     var parser = new DOMParser(),
                         result = parser.parseFromString(request.responseText, 'text/xml'),
                         svg = result.getElementsByTagName('svg')[0];
+                    
+                    if (!svg) {
+                        return;
+                    }
+
                     svg.removeAttribute('xmlns');
                     svg.removeAttribute('xmlns:a');
                     svg.removeAttribute('width');
@@ -565,12 +631,19 @@ export default function FloorSelector() {
                     svg.removeAttribute('xmlns:xlink');
                     svg.removeAttribute('xml:space');
                     svg.removeAttribute('version');
+                    
                     [].slice.call(attributes).forEach(function(attribute) {
                         if(attribute.name !== 'src' && attribute.name !== 'alt') {
                             svg.setAttribute(attribute.name, attribute.value);
                         }
                     });
                     svg.setAttribute('role', 'img');
+                    
+                    // Ensure proper styling to prevent zoom issues
+                    svg.style.transform = 'none';
+                    svg.style.width = '100%';
+                    svg.style.height = 'auto';
+                    
                     img.parentNode.replaceChild(svg, img);
                     markUnavailableOnFloorplans();
                 }
