@@ -4,102 +4,6 @@ export default function FloorSelector() {
     let flatInfoPopup = document.querySelector('.js-selector-popup');
     let hidePopupTimeout;
 
-    /**
-     * CRITICAL: Prevent height from being set on .js-floors container
-     * This function actively clears any height that gets set using multiple methods:
-     * 1. MutationObserver to watch for style attribute changes
-     * 2. Periodic check to catch any height that gets set
-     * 3. Override style.height setter if possible
-     */
-    function preventContainerHeight() {
-        const floorsContainer = document.querySelector('.js-floors');
-        if (!floorsContainer) {
-            // Retry if container doesn't exist yet
-            setTimeout(preventContainerHeight, 100);
-            return;
-        }
-
-        // Clear any existing inline height immediately
-        if (floorsContainer.style.height) {
-            floorsContainer.style.height = '';
-            floorsContainer.style.removeProperty('height');
-            console.log('[FloorPlan] Cleared existing inline height from .js-floors');
-        }
-
-        // Method 1: Use MutationObserver to watch for style attribute changes
-        const heightObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    const target = mutation.target;
-                    if (target.classList && target.classList.contains('js-floors')) {
-                        if (target.style.height && target.style.height !== '' && target.style.height !== 'auto') {
-                            console.warn('[FloorPlan] Height was set on .js-floors, clearing it:', target.style.height);
-                            target.style.height = '';
-                            target.style.removeProperty('height');
-                            target.style.setProperty('height', '', 'important');
-                        }
-                    }
-                }
-            });
-        });
-
-        // Observe the container for style attribute changes
-        heightObserver.observe(floorsContainer, {
-            attributes: true,
-            attributeFilter: ['style'],
-            attributeOldValue: true
-        });
-
-        // Method 2: Override the style.height setter directly on this element
-        try {
-            const styleObj = floorsContainer.style;
-            const originalHeightSetter = Object.getOwnPropertyDescriptor(styleObj, 'height');
-            
-            Object.defineProperty(styleObj, 'height', {
-                get: function() {
-                    return '';
-                },
-                set: function(value) {
-                    // Ignore any attempts to set height
-                    console.warn('[FloorPlan] Attempted to set height to:', value, '- blocked');
-                    return '';
-                },
-                configurable: true,
-                enumerable: true
-            });
-            
-            console.log('[FloorPlan] Height setter override active');
-        } catch (e) {
-            console.warn('[FloorPlan] Could not override height setter:', e);
-        }
-
-        // Method 3: Periodic check to catch any height that slips through
-        const heightCheckInterval = setInterval(function() {
-            if (floorsContainer.style.height && floorsContainer.style.height !== '' && floorsContainer.style.height !== 'auto') {
-                console.warn('[FloorPlan] Periodic check found height set, clearing:', floorsContainer.style.height);
-                floorsContainer.style.height = '';
-                floorsContainer.style.removeProperty('height');
-                floorsContainer.style.setProperty('height', '', 'important');
-            }
-        }, 100); // Check every 100ms
-
-        // Store references for cleanup if needed
-        floorsContainer._heightObserver = heightObserver;
-        floorsContainer._heightCheckInterval = heightCheckInterval;
-
-        console.log('[FloorPlan] Height prevention active on .js-floors container (MutationObserver + setter override + periodic check)');
-    }
-
-    // Initialize height prevention immediately and on DOM ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', preventContainerHeight);
-    } else {
-        preventContainerHeight();
-    }
-    
-    // Also initialize after a short delay to catch late-loading elements
-    setTimeout(preventContainerHeight, 500);
-
     // function onFlatInPlanClick(ev) {
     //     console.log(ev);
     // }
@@ -167,36 +71,21 @@ export default function FloorSelector() {
         //     return;
         flatInfoPopup.style.left = left + 'px';
         flatInfoPopup.style.top = top + 'px';
-
-        // If we are too close to the top, show the popup below the pointer.
-        // Otherwise show it above (default).
-        flatInfoPopup.classList.toggle('bottom', top - 100 < flatInfoPopup.clientHeight);
-
-        // Clamp the popup inside the viewport to avoid triggering horizontal scrollbars
-        // (transforms are included in getBoundingClientRect()).
-        const margin = 8;
-        const rect = flatInfoPopup.getBoundingClientRect();
-        let adjustedLeft = left;
-        let adjustedTop = top;
-
-        if (rect.left < margin) {
-            adjustedLeft += margin - rect.left;
-        }
-        if (rect.right > window.innerWidth - margin) {
-            adjustedLeft -= rect.right - (window.innerWidth - margin);
-        }
-        if (rect.top < margin) {
-            adjustedTop += margin - rect.top;
-        }
-        if (rect.bottom > window.innerHeight - margin) {
-            adjustedTop -= rect.bottom - (window.innerHeight - margin);
-        }
-
-        if (adjustedLeft !== left) {
-            flatInfoPopup.style.left = adjustedLeft + 'px';
-        }
-        if (adjustedTop !== top) {
-            flatInfoPopup.style.top = adjustedTop + 'px';
+        // console.log(top, flatInfoPopup.clientHeight);
+        // let left = rect.x + Math.round(rect.width / 2);
+        if (top-100 < flatInfoPopup.clientHeight) {
+        // if (rect.y < flatInfoPopup.clientHeight) {
+            flatInfoPopup.style.left = left + 'px';
+            flatInfoPopup.style.top =
+                top + 'px';
+                // (rect.y + rect.height + window.scrollY) + 'px';
+            flatInfoPopup.classList.add('bottom');
+        } else {
+            flatInfoPopup.style.left = left + 'px';
+            flatInfoPopup.style.top =
+                top + 'px';
+                // (rect.y + window.scrollY) + 'px';
+            flatInfoPopup.classList.remove('bottom');
         }
     }
 
@@ -211,174 +100,10 @@ export default function FloorSelector() {
         });
     }
 
-    /**
-     * Calculate floor plan dimensions based on window size minus delta
-     * @param {number} deltaWidth - Delta to subtract from window width (default: 300px for sidebar/margins)
-     * @param {number} deltaHeight - Delta to subtract from window height (default: 150px for header + margins)
-     * @returns {Object} Object with width and height in pixels
-     */
-    function calculateFloorplanDimensions(deltaWidth = 300, deltaHeight = 150) {
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-        
-        const dimensions = {
-            width: Math.max(300, windowWidth - deltaWidth), // Minimum 300px width
-            height: Math.max(300, windowHeight - deltaHeight) // Minimum 300px height
-        };
-        
-        console.log('[FloorPlan] Calculating dimensions:', {
-            windowWidth: windowWidth,
-            windowHeight: windowHeight,
-            deltaWidth: deltaWidth,
-            deltaHeight: deltaHeight,
-            calculatedWidth: dimensions.width,
-            calculatedHeight: dimensions.height
-        });
-        
-        return dimensions;
-    }
-
-    /**
-     * Reset all transforms on a floorplan element to prevent accumulation
-     * CRITICAL: Must be called BEFORE any sizing/positioning operations
-     * 
-     * @param {HTMLElement} element - The floorplan element to reset
-     */
-    function resetFloorplanTransform(element) {
-        if (!element) return;
-        
-        // Force reset transform immediately - use multiple methods to ensure it sticks
-        element.style.transform = 'none';
-        element.style.webkitTransform = 'none';
-        element.style.mozTransform = 'none';
-        element.style.msTransform = 'none';
-        element.style.oTransform = 'none';
-        element.style.transformOrigin = 'center center';
-        
-        // Remove any transform-related data attributes that might be used by libraries
-        if (element.dataset) {
-            delete element.dataset.scale;
-            delete element.dataset.transform;
-            delete element.dataset.zoom;
-        }
-        
-        // If element has a panzoom instance attached, destroy it
-        if (element._panzoom) {
-            try {
-                if (typeof element._panzoom.destroy === 'function') {
-                    element._panzoom.destroy();
-                }
-                delete element._panzoom;
-            } catch (e) {
-                console.warn('[FloorPlan] Error destroying panzoom instance:', e);
-            }
-        }
-        
-        console.log('[FloorPlan] Transform reset applied to:', element.className);
-    }
-
-    /**
-     * Get natural dimensions of floorplan element (before any transforms)
-     * Uses viewBox for SVG, naturalWidth/Height for images
-     * 
-     * @param {HTMLElement} element - The floorplan element
-     * @returns {Object} Object with naturalWidth and naturalHeight
-     */
-    function getNaturalDimensions(element) {
-        if (!element) return { naturalWidth: 0, naturalHeight: 0 };
-        
-        const elementType = element.tagName.toLowerCase();
-        
-        if (elementType === 'svg') {
-            // For SVG, use viewBox if available, otherwise width/height attributes
-            const viewBox = element.getAttribute('viewBox');
-            if (viewBox) {
-                const parts = viewBox.split(/\s+/);
-                if (parts.length >= 4) {
-                    return {
-                        naturalWidth: parseFloat(parts[2]) || 0,
-                        naturalHeight: parseFloat(parts[3]) || 0
-                    };
-                }
-            }
-            // Fallback to width/height attributes
-            const width = parseFloat(element.getAttribute('width')) || 0;
-            const height = parseFloat(element.getAttribute('height')) || 0;
-            return { naturalWidth: width, naturalHeight: height };
-        } else if (elementType === 'img') {
-            // For images, use naturalWidth/naturalHeight (not affected by CSS transforms)
-            return {
-                naturalWidth: element.naturalWidth || 0,
-                naturalHeight: element.naturalHeight || 0
-            };
-        }
-        
-        return { naturalWidth: 0, naturalHeight: 0 };
-    }
-
-    /**
-     * Apply auto-fitting dimensions to a floor plan element
-     * FIX: Changed from fixed pixel sizing to CSS-based responsive sizing
-     *      to prevent overflow and zoom accumulation issues.
-     * 
-     * CRITICAL: Always resets transform BEFORE applying any sizing to prevent accumulation
-     * 
-     * @param {HTMLElement} floorplanElement - The floor plan element (img or svg)
-     * @param {number} deltaWidth - Not used anymore (kept for compatibility)
-     * @param {number} deltaHeight - Not used anymore (kept for compatibility)
-     */
-    function applyFloorplanAutoFit(floorplanElement, deltaWidth = 300, deltaHeight = 150) {
-        if (!floorplanElement) {
-            console.warn('[FloorPlan] applyFloorplanAutoFit: floorplanElement is null or undefined');
-            return;
-        }
-        
-        const elementType = floorplanElement.tagName.toLowerCase();
-        const className = floorplanElement.className || 'unknown';
-        
-        console.log('[FloorPlan] Applying CSS-based auto-fit to element:', {
-            elementType: elementType,
-            className: className
-        });
-        
-        // CRITICAL STEP 1: Reset transform FIRST, before any other operations
-        // This prevents reading transformed dimensions and accumulating scale
-        resetFloorplanTransform(floorplanElement);
-        
-        // Get natural dimensions (before any transforms) for logging/debugging
-        const naturalDims = getNaturalDimensions(floorplanElement);
-        console.log('[FloorPlan] Natural dimensions (untransformed):', naturalDims);
-        
-        // FIX: Use CSS-based sizing instead of fixed pixels to prevent overflow
-        // Remove any inline width/height that could cause overflow
-        floorplanElement.style.width = '';
-        floorplanElement.style.height = '';
-        floorplanElement.style.maxWidth = '';
-        floorplanElement.style.maxHeight = '';
-        
-        // CRITICAL STEP 2: Ensure transform stays reset (defense in depth)
-        resetFloorplanTransform(floorplanElement);
-        
-        // Maintain aspect ratio - CSS will handle sizing via max-width/max-height
-        if (elementType === 'img') {
-            floorplanElement.style.objectFit = 'contain';
-        } else if (elementType === 'svg') {
-            // For SVG, preserve aspect ratio
-            if (!floorplanElement.getAttribute('preserveAspectRatio')) {
-                floorplanElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-            }
-        }
-        
-        console.log('[FloorPlan] CSS-based auto-fit applied. Element will size via CSS max-width/max-height.');
-    }
-
     function hideAllFloorplans() {
         let allSlides = visualBlock.querySelectorAll('.floorplan');
         allSlides.forEach((slide) => {
             slide.classList.remove('active');
-            // CRITICAL: Reset transforms when hiding to prevent zoom accumulation
-            // Use comprehensive reset function instead of simple style assignment
-            resetFloorplanTransform(slide);
         });
     }
 
@@ -474,9 +199,7 @@ export default function FloorSelector() {
     }
 
     function doAction(target) {
-        console.log('[FloorPlan] doAction called with target:', target);
         let targetPath = target.split('-');
-        console.log('[FloorPlan] Parsed targetPath:', targetPath);
 
         // if (targetIsFlatInPlan(ev.target)) {
         //     if (targetPath[1]) {
@@ -529,56 +252,12 @@ export default function FloorSelector() {
                 let closeLinkElem = document.querySelector(closeLinkQuery);
                 closeLinkElem.dataset.target = floorTarget;
             } else {
-                console.log('[FloorPlan] Opening floor plan:', {
-                    target: target,
-                    targetPath: targetPath,
-                    floorPlanClass: targetPath[1]
-                });
-                
                 document.querySelector('.js-floors').classList.remove('has-second-floor');
-                
-                // CRITICAL: Reset ALL floorplan transforms BEFORE switching to prevent zoom accumulation
-                // This must happen synchronously before any other operations
-                let allFloorplans = visualBlock.querySelectorAll('.floorplan');
-                console.log('[FloorPlan] Resetting', allFloorplans.length, 'existing floor plans');
-                allFloorplans.forEach(function(floorplan) {
-                    resetFloorplanTransform(floorplan);
-                });
-                
-                // Replace SVG (async operation, but transform already reset)
+                // console.log(targetPath[1]);
                 replaceFloorplanSvg(targetPath[1]);
-                
-                // Get target floorplan AFTER resetting all transforms
                 let targetFloorplan =
                     visualBlock.querySelector('.floorplan.' + targetPath[1]);
-                
-                if (targetFloorplan) {
-                    console.log('[FloorPlan] Target floor plan found:', {
-                        element: targetFloorplan,
-                        tagName: targetFloorplan.tagName,
-                        className: targetFloorplan.className
-                    });
-                    
-                    // CRITICAL: Reset transform on target BEFORE applying auto-fit
-                    // This ensures we're working with natural dimensions, not transformed ones
-                    resetFloorplanTransform(targetFloorplan);
-                    
-                    // Calculate delta values (adjust these as needed)
-                    // deltaWidth accounts for sidebar (260px) + margins (40px) = ~300px
-                    // deltaHeight accounts for header + margins = ~150px
-                    const deltaWidth = 300;
-                    const deltaHeight = 150;
-                    
-                    // Apply auto-fitting dimensions based on window size
-                    // applyFloorplanAutoFit will reset transform again as defense in depth
-                    applyFloorplanAutoFit(targetFloorplan, deltaWidth, deltaHeight);
-                    
-                    targetFloorplan.classList.add('active');
-                    console.log('[FloorPlan] Floor plan activated:', targetPath[1]);
-                } else {
-                    console.warn('[FloorPlan] Target floor plan not found for class:', targetPath[1]);
-                }
-                
+                targetFloorplan.classList.add('active');
                 let matches = targetPath[1].match(/[a-z](\d+)/);
                 if (matches && matches[1]) {
                     let floorInt = parseInt(matches[1]);
@@ -599,59 +278,6 @@ export default function FloorSelector() {
             } else if (target == 'apartments') {
                 resetAndFilterTableByFloor(-1, -1, 'apartment');
             }
-        }
-
-        // CRITICAL: Prevent and clear any height being set on .js-floors container
-        // The container should size naturally based on CSS (min-height, aspect-ratio, content)
-        // Setting fixed height via JS causes layout issues and prevents natural sizing
-        // CSS handles sizing via:
-        //   - min-height: 28.3333333333rem (680px)
-        //   - aspect-ratio: 1440/790 (on xl screens)
-        //   - Content-based height (natural flow)
-        
-        // Aggressively clear height on every action to prevent accumulation
-        let floorsContainer = document.querySelector('.js-floors');
-        if (floorsContainer) {
-            // Clear height immediately
-            if (floorsContainer.style.height) {
-                floorsContainer.style.height = '';
-                console.log('[FloorPlan] Cleared inline height from .js-floors container');
-            }
-            
-            // Also clear using removeProperty for extra safety
-            if (floorsContainer.style.removeProperty) {
-                floorsContainer.style.removeProperty('height');
-            }
-            
-            // Set height to empty string explicitly
-            floorsContainer.style.setProperty('height', '', 'important');
-            
-            // Force a reflow to ensure the change takes effect
-            void floorsContainer.offsetHeight;
-        }
-        
-        // Handle window resize to update floor plan dimensions
-        // Debounce resize handler
-        let resizeTimeout;
-        function handleResize() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(function() {
-                const activeFloorplan = visualBlock.querySelector('.floorplan.active');
-                if (activeFloorplan) {
-                    console.log('[FloorPlan] Window resized, resetting transform and updating dimensions');
-                    // CRITICAL: Reset transform on resize to prevent accumulation
-                    resetFloorplanTransform(activeFloorplan);
-                    const deltaWidth = 300;
-                    const deltaHeight = 150;
-                    applyFloorplanAutoFit(activeFloorplan, deltaWidth, deltaHeight);
-                }
-            }, 250);
-        }
-        
-        // Only add resize listener once
-        if (!window.floorplanResizeHandlerAdded) {
-            window.addEventListener('resize', handleResize);
-            window.floorplanResizeHandlerAdded = true;
         }
     }
 
@@ -734,9 +360,6 @@ export default function FloorSelector() {
     this.setVisualBlock = function(element) {
         visualBlock = element;
         setupVisualBlock();
-        
-        // Ensure height prevention is active when visual block is set
-        preventContainerHeight();
     }
 
     let filterSliders = document.querySelectorAll('.js-filter-slider');
@@ -904,30 +527,9 @@ export default function FloorSelector() {
     });
 
     function replaceFloorplanSvg(targetClass) {
-        console.log('[FloorPlan] replaceFloorplanSvg called for:', targetClass);
-        
-        // Check if SVG was already replaced - if so, skip replacement
-        var existingSvg = document.querySelector('svg.floorplan.' + targetClass);
-        if (existingSvg) {
-            console.log('[FloorPlan] SVG already exists, resetting transform and applying auto-fit');
-            // CRITICAL: Reset transform BEFORE applying auto-fit to prevent accumulation
-            resetFloorplanTransform(existingSvg);
-            // SVG already exists, apply auto-fitting dimensions
-            const deltaWidth = 300;
-            const deltaHeight = 150;
-            applyFloorplanAutoFit(existingSvg, deltaWidth, deltaHeight);
-            markUnavailableOnFloorplans();
-            return;
-        }
-
         var svgImages = document.querySelectorAll('img.floorplan.' + targetClass);
-        console.log('[FloorPlan] Found', svgImages.length, 'image(s) to replace for class:', targetClass);
 
         [].forEach.call(svgImages, function(img) {
-            // Skip if this image was already replaced (shouldn't happen, but safety check)
-            if (img.tagName.toLowerCase() !== 'img') {
-                return;
-            }
 
             var attributes = img.attributes;
             var request = new XMLHttpRequest();
@@ -935,19 +537,9 @@ export default function FloorSelector() {
             request.onload = function () {
 
                 if(request.status >= 200 && request.status < 400) {
-                    // Double-check the img still exists and hasn't been replaced
-                    if (!img.parentNode || img.tagName.toLowerCase() !== 'img') {
-                        return;
-                    }
-
                     var parser = new DOMParser(),
                         result = parser.parseFromString(request.responseText, 'text/xml'),
                         svg = result.getElementsByTagName('svg')[0];
-                    
-                    if (!svg) {
-                        return;
-                    }
-
                     svg.removeAttribute('xmlns');
                     svg.removeAttribute('xmlns:a');
                     svg.removeAttribute('width');
@@ -958,29 +550,14 @@ export default function FloorSelector() {
                     svg.removeAttribute('xmlns:xlink');
                     svg.removeAttribute('xml:space');
                     svg.removeAttribute('version');
-                    
                     [].slice.call(attributes).forEach(function(attribute) {
                         if(attribute.name !== 'src' && attribute.name !== 'alt') {
                             svg.setAttribute(attribute.name, attribute.value);
                         }
                     });
                     svg.setAttribute('role', 'img');
-                    
-                    console.log('[FloorPlan] Replacing img with SVG for:', targetClass);
                     img.parentNode.replaceChild(svg, img);
-                    console.log('[FloorPlan] SVG replacement completed');
-                    
-                    // CRITICAL: Reset transform immediately after replacement, before auto-fit
-                    // This ensures the new SVG starts with no transforms
-                    resetFloorplanTransform(svg);
-                    
-                    // Apply auto-fitting dimensions after SVG replacement
-                    const deltaWidth = 300;
-                    const deltaHeight = 150;
-                    applyFloorplanAutoFit(svg, deltaWidth, deltaHeight);
-                    
                     markUnavailableOnFloorplans();
-                    console.log('[FloorPlan] SVG replacement and auto-fit completed for:', targetClass);
                 }
 
             }

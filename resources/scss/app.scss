@@ -372,8 +372,6 @@ a {
 
 .js-floors {
     position: relative;
-    // Keep any (inlined) SVG floorplans from forcing horizontal page scroll.
-    overflow-x: hidden;
     min-height: getRem(680px);
     &.has-second-floor {
         min-height: getRem(1020px);
@@ -556,11 +554,6 @@ a {
             padding: getRem(50px);
             padding-right: 15px;
             padding-left: 15px;
-            // FIX: Prevent horizontal overflow
-            max-width: 100vw;
-            overflow-x: hidden;
-            overflow-y: auto;
-            box-sizing: border-box;
             // @include sm {
             //     padding-right: calc(50vw - 270px + 15px);
             // }
@@ -569,8 +562,6 @@ a {
                 padding-right: calc(50vw - 360px + 15px);
                 left: getRem(260px);
                 width: calc(100% - #{getRem(260px)});
-                // FIX: Ensure width calculation doesn't exceed viewport
-                max-width: calc(100vw - #{getRem(260px)});
             }
             @include lg {
                 padding-right: calc(50vw - 480px + 15px);
@@ -673,20 +664,11 @@ a {
                 pointer-events: all;
             }
 
-            // IMPORTANT: floorplans are converted from <img> to inline <svg> by replaceFloorplanSvg().
-            // Size both the same way to avoid "zoom" changes when switching floors/flats.
-            // FIX: Use responsive sizing to prevent overflow and zoom accumulation
-            width: auto;
-            height: auto;
-            max-width: 100%;
-            max-height: 85vh;
-            object-fit: contain;
-            // FIX: Always reset transform to prevent accumulation
-            transform: none !important;
-            transform-origin: center center;
+            width: 100%;
+            max-height: 100%;
             @include md {
                 margin-right: getRem(40px);
-                max-width: calc(100% - #{getRem(40px)});
+                width: 100%;
             }
             // @include md {
             //     max-width: getRem(722px / 2);
@@ -704,19 +686,54 @@ a {
             //     max-width: getRem(722px / 0.75);
             //     max-height: getRem(497px / 0.75);
             // }
-        }
 
-        img.floorplan,
-        svg.floorplan {
-            display: block;
-            width: auto;
-            max-width: 100%;
-            height: auto;
-            max-height: 85vh;
-            object-fit: contain;
-            // FIX: Prevent transform accumulation
-            transform: none !important;
-            transform-origin: center center;
+            @include md {
+                transform-origin: 70% 20%;
+                transform: scale(2.5);
+            }
+            @include lg {
+                transform-origin: center center;
+                transform: scale(1);
+            }
+
+            &.l1 {
+                transform: scale(0.9);
+                @include md {
+                    transform-origin: 70% 0%;
+                    transform: scale(2.5);
+                }
+                @include lg {
+                    transform-origin: center center;
+                    transform: scale(1);
+                }
+                @include xl {
+                    transform-origin: top center;
+                    transform: scale(1.1);
+                }
+                @include xxl {
+                    transform-origin: top center;
+                    transform: scale(1.2);
+                }
+            }
+            &.l2 {
+                transform: scale(0.9);
+                @include md {
+                    transform-origin: top right;
+                    transform: scale(2.5);
+                }
+                @include lg {
+                    transform-origin: 100% 50%;
+                    transform: scale(1.3);
+                }
+                // @include xl {
+                //     transform-origin: 100% 40%;
+                //     transform: scale(1.4);
+                // }
+                @include xxl {
+                    transform-origin: 100% 40%;
+                    transform: scale(1.4);
+                }
+            }
         }
 
     }
@@ -753,13 +770,6 @@ a {
                 opacity: 1;
                 pointer-events: all;
             }
-
-            @media (max-width: 1199.98px) {
-                height: auto;
-                // Allow vertical growth on smaller screens, but never allow horizontal overflow.
-                overflow-y: visible;
-                overflow-x: hidden;
-            }
             // @include md {
             //     max-width: getRem(722px / 2);
             //     max-height: getRem(497px / 2);
@@ -780,17 +790,17 @@ a {
             &.has-second-floor {
                 .plan {
                     opacity: 1;
+                    height: 33%;
                     @include lg {
                         height: 50%;
                     }
                 }
 
                 .plan:first-of-type {
-                    @include lg {
-                        top: 0;
-                    }
+                    top: 0;
                 }
                 .plan:last-of-type {
+                    top: 33%;
                     @include lg {
                         top: 50%;
                     }
@@ -807,16 +817,6 @@ a {
                 pointer-events: none;
                 transition: opacity 500ms;
                 display: block;
-
-                @media (max-width: 1199.98px) {
-                    position: relative;
-                    top: auto;
-                    left: auto;
-                    width: 100%;
-                    height: auto;
-                    margin: 0 auto;
-                }
-
                 @include lg {
                     top: 0;
                     left: 0;
@@ -835,13 +835,6 @@ a {
                     object-fit: contain;
                     top: 0;
                     left: 0;
-
-                    @media (max-width: 1199.98px) {
-                        position: relative;
-                        height: auto;
-                        max-height: 75vh;
-                        display: block;
-                    }
                 }
             }
 
@@ -1018,9 +1011,17 @@ a {
     .loft {
         .aptplan {
             .plan {
-                @include xl {
-                    left: getRem(200px);
-                    width: calc(100% - #{getRem(200px)});
+                position: absolute;
+                top: 0%;
+                left: -45%;
+                width: 160%;
+                height: 60%;
+                object-fit: contain;
+                @include md {
+                    top: 0;
+                    left: 200px;
+                    width: calc(100% - 200px);
+                    height: 100%;
                 }
             }
         }
@@ -2223,67 +2224,4 @@ html[lang="ru"] .js-flats-table.js-flats-table.js-flats-table thead {
     @media (max-width: 400px) {
         font-size: 0.45rem;
     }
-}
-
-/* ============================================================================
- * FIX: Floorplan overflow and zoom issues
- * 
- * Problem: Transform scaling accumulates when switching floors/flats,
- *          causing zoom and horizontal scroll overflow.
- * Solution: Override all transforms, use CSS-based responsive sizing,
- *          ensure proper containment within viewport.
- * ============================================================================ */
-
-/* Prevent all transform scaling - override media query rules */
-.js-floors .afloors .floorplan,
-.js-floors .lfloors .floorplan,
-.js-floors .apt .floorplan,
-.js-floors .loft .floorplan {
-    transform: none !important;
-    transform-origin: center center !important;
-    max-width: 100% !important;
-    width: auto !important;
-    height: auto !important;
-    max-height: 85vh !important;
-    object-fit: contain !important;
-}
-
-/* Ensure container doesn't overflow viewport */
-.js-floors .afloors .content,
-.js-floors .lfloors .content {
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    max-width: 100vw !important;
-}
-
-/* If inline SVG is used - ensure proper sizing */
-.js-floors .afloors .floorplan svg,
-.js-floors .lfloors .floorplan svg,
-.js-floors .apt .floorplan svg,
-.js-floors .loft .floorplan svg {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    max-height: 85vh !important;
-    display: block !important;
-    transform: none !important;
-    transform-origin: center center !important;
-    /* Preserve aspect ratio */
-    preserveAspectRatio: xMidYMid meet !important;
-}
-
-/* Ensure images also fit properly */
-.js-floors .afloors .floorplan img,
-.js-floors .lfloors .floorplan img {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    max-height: 85vh !important;
-    object-fit: contain !important;
-    display: block !important;
-}
-
-/* Prevent horizontal scroll on body/html */
-html, body {
-    overflow-x: hidden !important;
 }
