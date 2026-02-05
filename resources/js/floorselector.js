@@ -115,6 +115,53 @@ export default function FloorSelector() {
         });
     }
 
+    /**
+     * Calculate floor plan dimensions based on window size minus delta
+     * @param {number} deltaWidth - Delta to subtract from window width (default: 300px for sidebar/margins)
+     * @param {number} deltaHeight - Delta to subtract from window height (default: 150px for header + margins)
+     * @returns {Object} Object with width and height in pixels
+     */
+    function calculateFloorplanDimensions(deltaWidth = 300, deltaHeight = 150) {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        return {
+            width: Math.max(300, windowWidth - deltaWidth), // Minimum 300px width
+            height: Math.max(300, windowHeight - deltaHeight) // Minimum 300px height
+        };
+    }
+
+    /**
+     * Apply auto-fitting dimensions to a floor plan element
+     * Uses window dimensions minus delta values (in pixels) instead of percentages
+     * @param {HTMLElement} floorplanElement - The floor plan element (img or svg)
+     * @param {number} deltaWidth - Delta for width calculation (default: 300px)
+     * @param {number} deltaHeight - Delta for height calculation (default: 150px)
+     */
+    function applyFloorplanAutoFit(floorplanElement, deltaWidth = 300, deltaHeight = 150) {
+        if (!floorplanElement) return;
+        
+        const dimensions = calculateFloorplanDimensions(deltaWidth, deltaHeight);
+        
+        // Apply dimensions using pixel values (window size - delta)
+        floorplanElement.style.width = dimensions.width + 'px';
+        floorplanElement.style.height = dimensions.height + 'px';
+        floorplanElement.style.maxWidth = dimensions.width + 'px';
+        floorplanElement.style.maxHeight = dimensions.height + 'px';
+        floorplanElement.style.transform = 'none';
+        floorplanElement.style.transformOrigin = 'center center';
+        
+        // Maintain aspect ratio - use contain to fit within bounds
+        if (floorplanElement.tagName.toLowerCase() === 'img') {
+            floorplanElement.style.objectFit = 'contain';
+        } else if (floorplanElement.tagName.toLowerCase() === 'svg') {
+            // For SVG, preserve aspect ratio by setting viewBox if not already set
+            if (!floorplanElement.getAttribute('preserveAspectRatio')) {
+                floorplanElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+            }
+        }
+    }
+
     function hideAllFloorplans() {
         let allSlides = visualBlock.querySelectorAll('.floorplan');
         allSlides.forEach((slide) => {
@@ -277,10 +324,6 @@ export default function FloorSelector() {
                 allFloorplans.forEach(function(floorplan) {
                     floorplan.style.transform = 'none';
                     floorplan.style.transformOrigin = 'center center';
-                    if (floorplan.tagName.toLowerCase() === 'svg') {
-                        floorplan.style.width = '100%';
-                        floorplan.style.height = 'auto';
-                    }
                 });
                 
                 // console.log(targetPath[1]);
@@ -289,13 +332,15 @@ export default function FloorSelector() {
                     visualBlock.querySelector('.floorplan.' + targetPath[1]);
                 
                 if (targetFloorplan) {
-                    // Ensure the target floorplan has no transform issues
-                    targetFloorplan.style.transform = 'none';
-                    targetFloorplan.style.transformOrigin = 'center center';
-                    if (targetFloorplan.tagName.toLowerCase() === 'svg') {
-                        targetFloorplan.style.width = '100%';
-                        targetFloorplan.style.height = 'auto';
-                    }
+                    // Calculate delta values (adjust these as needed)
+                    // deltaWidth accounts for sidebar (260px) + margins (40px) = ~300px
+                    // deltaHeight accounts for header + margins = ~150px
+                    const deltaWidth = 300;
+                    const deltaHeight = 150;
+                    
+                    // Apply auto-fitting dimensions based on window size
+                    applyFloorplanAutoFit(targetFloorplan, deltaWidth, deltaHeight);
+                    
                     targetFloorplan.classList.add('active');
                 }
                 
@@ -327,13 +372,38 @@ export default function FloorSelector() {
             if (activeSlide) {
                 // Use setTimeout to ensure DOM has updated after SVG replacement
                 setTimeout(function() {
-                    let contentHeight = activeSlide.offsetHeight + 150;
+                    // Calculate container height based on window height minus delta
+                    const deltaHeight = 150;
+                    const windowHeight = window.innerHeight;
+                    const containerHeight = Math.max(400, windowHeight - deltaHeight);
+                    
                     let floorsContainer = document.querySelector('.js-floors');
                     if (floorsContainer) {
-                        floorsContainer.style.height = contentHeight + 'px';
+                        floorsContainer.style.height = containerHeight + 'px';
                     }
                 }, 100);
             }
+        }
+        
+        // Handle window resize to update floor plan dimensions
+        // Debounce resize handler
+        let resizeTimeout;
+        function handleResize() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const activeFloorplan = visualBlock.querySelector('.floorplan.active');
+                if (activeFloorplan) {
+                    const deltaWidth = 300;
+                    const deltaHeight = 150;
+                    applyFloorplanAutoFit(activeFloorplan, deltaWidth, deltaHeight);
+                }
+            }, 250);
+        }
+        
+        // Only add resize listener once
+        if (!window.floorplanResizeHandlerAdded) {
+            window.addEventListener('resize', handleResize);
+            window.floorplanResizeHandlerAdded = true;
         }
     }
 
@@ -586,10 +656,10 @@ export default function FloorSelector() {
         // Check if SVG was already replaced - if so, skip replacement
         var existingSvg = document.querySelector('svg.floorplan.' + targetClass);
         if (existingSvg) {
-            // SVG already exists, just ensure it's properly styled
-            existingSvg.style.transform = 'none';
-            existingSvg.style.width = '100%';
-            existingSvg.style.height = 'auto';
+            // SVG already exists, apply auto-fitting dimensions
+            const deltaWidth = 300;
+            const deltaHeight = 150;
+            applyFloorplanAutoFit(existingSvg, deltaWidth, deltaHeight);
             markUnavailableOnFloorplans();
             return;
         }
@@ -639,12 +709,13 @@ export default function FloorSelector() {
                     });
                     svg.setAttribute('role', 'img');
                     
-                    // Ensure proper styling to prevent zoom issues
-                    svg.style.transform = 'none';
-                    svg.style.width = '100%';
-                    svg.style.height = 'auto';
-                    
                     img.parentNode.replaceChild(svg, img);
+                    
+                    // Apply auto-fitting dimensions after SVG replacement
+                    const deltaWidth = 300;
+                    const deltaHeight = 150;
+                    applyFloorplanAutoFit(svg, deltaWidth, deltaHeight);
+                    
                     markUnavailableOnFloorplans();
                 }
 
