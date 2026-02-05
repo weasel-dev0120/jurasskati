@@ -4,6 +4,102 @@ export default function FloorSelector() {
     let flatInfoPopup = document.querySelector('.js-selector-popup');
     let hidePopupTimeout;
 
+    /**
+     * CRITICAL: Prevent height from being set on .js-floors container
+     * This function actively clears any height that gets set using multiple methods:
+     * 1. MutationObserver to watch for style attribute changes
+     * 2. Periodic check to catch any height that gets set
+     * 3. Override style.height setter if possible
+     */
+    function preventContainerHeight() {
+        const floorsContainer = document.querySelector('.js-floors');
+        if (!floorsContainer) {
+            // Retry if container doesn't exist yet
+            setTimeout(preventContainerHeight, 100);
+            return;
+        }
+
+        // Clear any existing inline height immediately
+        if (floorsContainer.style.height) {
+            floorsContainer.style.height = '';
+            floorsContainer.style.removeProperty('height');
+            console.log('[FloorPlan] Cleared existing inline height from .js-floors');
+        }
+
+        // Method 1: Use MutationObserver to watch for style attribute changes
+        const heightObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const target = mutation.target;
+                    if (target.classList && target.classList.contains('js-floors')) {
+                        if (target.style.height && target.style.height !== '' && target.style.height !== 'auto') {
+                            console.warn('[FloorPlan] Height was set on .js-floors, clearing it:', target.style.height);
+                            target.style.height = '';
+                            target.style.removeProperty('height');
+                            target.style.setProperty('height', '', 'important');
+                        }
+                    }
+                }
+            });
+        });
+
+        // Observe the container for style attribute changes
+        heightObserver.observe(floorsContainer, {
+            attributes: true,
+            attributeFilter: ['style'],
+            attributeOldValue: true
+        });
+
+        // Method 2: Override the style.height setter directly on this element
+        try {
+            const styleObj = floorsContainer.style;
+            const originalHeightSetter = Object.getOwnPropertyDescriptor(styleObj, 'height');
+            
+            Object.defineProperty(styleObj, 'height', {
+                get: function() {
+                    return '';
+                },
+                set: function(value) {
+                    // Ignore any attempts to set height
+                    console.warn('[FloorPlan] Attempted to set height to:', value, '- blocked');
+                    return '';
+                },
+                configurable: true,
+                enumerable: true
+            });
+            
+            console.log('[FloorPlan] Height setter override active');
+        } catch (e) {
+            console.warn('[FloorPlan] Could not override height setter:', e);
+        }
+
+        // Method 3: Periodic check to catch any height that slips through
+        const heightCheckInterval = setInterval(function() {
+            if (floorsContainer.style.height && floorsContainer.style.height !== '' && floorsContainer.style.height !== 'auto') {
+                console.warn('[FloorPlan] Periodic check found height set, clearing:', floorsContainer.style.height);
+                floorsContainer.style.height = '';
+                floorsContainer.style.removeProperty('height');
+                floorsContainer.style.setProperty('height', '', 'important');
+            }
+        }, 100); // Check every 100ms
+
+        // Store references for cleanup if needed
+        floorsContainer._heightObserver = heightObserver;
+        floorsContainer._heightCheckInterval = heightCheckInterval;
+
+        console.log('[FloorPlan] Height prevention active on .js-floors container (MutationObserver + setter override + periodic check)');
+    }
+
+    // Initialize height prevention immediately and on DOM ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', preventContainerHeight);
+    } else {
+        preventContainerHeight();
+    }
+    
+    // Also initialize after a short delay to catch late-loading elements
+    setTimeout(preventContainerHeight, 500);
+
     // function onFlatInPlanClick(ev) {
     //     console.log(ev);
     // }
@@ -505,7 +601,7 @@ export default function FloorSelector() {
             }
         }
 
-        // REMOVED: Auto-sizing container height
+        // CRITICAL: Prevent and clear any height being set on .js-floors container
         // The container should size naturally based on CSS (min-height, aspect-ratio, content)
         // Setting fixed height via JS causes layout issues and prevents natural sizing
         // CSS handles sizing via:
@@ -513,11 +609,25 @@ export default function FloorSelector() {
         //   - aspect-ratio: 1440/790 (on xl screens)
         //   - Content-based height (natural flow)
         
-        // If you need to clear any previously set inline height:
+        // Aggressively clear height on every action to prevent accumulation
         let floorsContainer = document.querySelector('.js-floors');
-        if (floorsContainer && floorsContainer.style.height) {
-            floorsContainer.style.height = '';
-            console.log('[FloorPlan] Cleared inline height from .js-floors container');
+        if (floorsContainer) {
+            // Clear height immediately
+            if (floorsContainer.style.height) {
+                floorsContainer.style.height = '';
+                console.log('[FloorPlan] Cleared inline height from .js-floors container');
+            }
+            
+            // Also clear using removeProperty for extra safety
+            if (floorsContainer.style.removeProperty) {
+                floorsContainer.style.removeProperty('height');
+            }
+            
+            // Set height to empty string explicitly
+            floorsContainer.style.setProperty('height', '', 'important');
+            
+            // Force a reflow to ensure the change takes effect
+            void floorsContainer.offsetHeight;
         }
         
         // Handle window resize to update floor plan dimensions
@@ -624,6 +734,9 @@ export default function FloorSelector() {
     this.setVisualBlock = function(element) {
         visualBlock = element;
         setupVisualBlock();
+        
+        // Ensure height prevention is active when visual block is set
+        preventContainerHeight();
     }
 
     let filterSliders = document.querySelectorAll('.js-filter-slider');
