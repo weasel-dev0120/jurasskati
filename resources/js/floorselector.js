@@ -144,10 +144,12 @@ export default function FloorSelector() {
 
     /**
      * Apply auto-fitting dimensions to a floor plan element
-     * Uses window dimensions minus delta values (in pixels) instead of percentages
+     * FIX: Changed from fixed pixel sizing to CSS-based responsive sizing
+     *      to prevent overflow and zoom accumulation issues.
+     * 
      * @param {HTMLElement} floorplanElement - The floor plan element (img or svg)
-     * @param {number} deltaWidth - Delta for width calculation (default: 300px)
-     * @param {number} deltaHeight - Delta for height calculation (default: 150px)
+     * @param {number} deltaWidth - Not used anymore (kept for compatibility)
+     * @param {number} deltaHeight - Not used anymore (kept for compatibility)
      */
     function applyFloorplanAutoFit(floorplanElement, deltaWidth = 300, deltaHeight = 150) {
         if (!floorplanElement) {
@@ -155,42 +157,36 @@ export default function FloorSelector() {
             return;
         }
         
-        const dimensions = calculateFloorplanDimensions(deltaWidth, deltaHeight);
         const elementType = floorplanElement.tagName.toLowerCase();
         const className = floorplanElement.className || 'unknown';
         
-        console.log('[FloorPlan] Applying auto-fit to element:', {
+        console.log('[FloorPlan] Applying CSS-based auto-fit to element:', {
             elementType: elementType,
-            className: className,
-            dimensions: dimensions,
-            deltaWidth: deltaWidth,
-            deltaHeight: deltaHeight
+            className: className
         });
         
-        // Apply dimensions using pixel values (window size - delta)
-        floorplanElement.style.width = dimensions.width + 'px';
-        floorplanElement.style.height = dimensions.height + 'px';
-        floorplanElement.style.maxWidth = dimensions.width + 'px';
-        floorplanElement.style.maxHeight = dimensions.height + 'px';
+        // FIX: Use CSS-based sizing instead of fixed pixels to prevent overflow
+        // Remove any inline width/height that could cause overflow
+        floorplanElement.style.width = '';
+        floorplanElement.style.height = '';
+        floorplanElement.style.maxWidth = '';
+        floorplanElement.style.maxHeight = '';
+        
+        // CRITICAL: Always reset transform to prevent zoom accumulation
         floorplanElement.style.transform = 'none';
         floorplanElement.style.transformOrigin = 'center center';
         
-        // Maintain aspect ratio - use contain to fit within bounds
+        // Maintain aspect ratio - CSS will handle sizing via max-width/max-height
         if (elementType === 'img') {
             floorplanElement.style.objectFit = 'contain';
         } else if (elementType === 'svg') {
-            // For SVG, preserve aspect ratio by setting viewBox if not already set
+            // For SVG, preserve aspect ratio
             if (!floorplanElement.getAttribute('preserveAspectRatio')) {
                 floorplanElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
             }
         }
         
-        console.log('[FloorPlan] Auto-fit applied successfully. Final styles:', {
-            width: floorplanElement.style.width,
-            height: floorplanElement.style.height,
-            maxWidth: floorplanElement.style.maxWidth,
-            maxHeight: floorplanElement.style.maxHeight
-        });
+        console.log('[FloorPlan] CSS-based auto-fit applied. Element will size via CSS max-width/max-height.');
     }
 
     function hideAllFloorplans() {
