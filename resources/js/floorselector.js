@@ -143,9 +143,89 @@ export default function FloorSelector() {
     }
 
     /**
+     * Reset all transforms on a floorplan element to prevent accumulation
+     * CRITICAL: Must be called BEFORE any sizing/positioning operations
+     * 
+     * @param {HTMLElement} element - The floorplan element to reset
+     */
+    function resetFloorplanTransform(element) {
+        if (!element) return;
+        
+        // Force reset transform immediately - use multiple methods to ensure it sticks
+        element.style.transform = 'none';
+        element.style.webkitTransform = 'none';
+        element.style.mozTransform = 'none';
+        element.style.msTransform = 'none';
+        element.style.oTransform = 'none';
+        element.style.transformOrigin = 'center center';
+        
+        // Remove any transform-related data attributes that might be used by libraries
+        if (element.dataset) {
+            delete element.dataset.scale;
+            delete element.dataset.transform;
+            delete element.dataset.zoom;
+        }
+        
+        // If element has a panzoom instance attached, destroy it
+        if (element._panzoom) {
+            try {
+                if (typeof element._panzoom.destroy === 'function') {
+                    element._panzoom.destroy();
+                }
+                delete element._panzoom;
+            } catch (e) {
+                console.warn('[FloorPlan] Error destroying panzoom instance:', e);
+            }
+        }
+        
+        console.log('[FloorPlan] Transform reset applied to:', element.className);
+    }
+
+    /**
+     * Get natural dimensions of floorplan element (before any transforms)
+     * Uses viewBox for SVG, naturalWidth/Height for images
+     * 
+     * @param {HTMLElement} element - The floorplan element
+     * @returns {Object} Object with naturalWidth and naturalHeight
+     */
+    function getNaturalDimensions(element) {
+        if (!element) return { naturalWidth: 0, naturalHeight: 0 };
+        
+        const elementType = element.tagName.toLowerCase();
+        
+        if (elementType === 'svg') {
+            // For SVG, use viewBox if available, otherwise width/height attributes
+            const viewBox = element.getAttribute('viewBox');
+            if (viewBox) {
+                const parts = viewBox.split(/\s+/);
+                if (parts.length >= 4) {
+                    return {
+                        naturalWidth: parseFloat(parts[2]) || 0,
+                        naturalHeight: parseFloat(parts[3]) || 0
+                    };
+                }
+            }
+            // Fallback to width/height attributes
+            const width = parseFloat(element.getAttribute('width')) || 0;
+            const height = parseFloat(element.getAttribute('height')) || 0;
+            return { naturalWidth: width, naturalHeight: height };
+        } else if (elementType === 'img') {
+            // For images, use naturalWidth/naturalHeight (not affected by CSS transforms)
+            return {
+                naturalWidth: element.naturalWidth || 0,
+                naturalHeight: element.naturalHeight || 0
+            };
+        }
+        
+        return { naturalWidth: 0, naturalHeight: 0 };
+    }
+
+    /**
      * Apply auto-fitting dimensions to a floor plan element
      * FIX: Changed from fixed pixel sizing to CSS-based responsive sizing
      *      to prevent overflow and zoom accumulation issues.
+     * 
+     * CRITICAL: Always resets transform BEFORE applying any sizing to prevent accumulation
      * 
      * @param {HTMLElement} floorplanElement - The floor plan element (img or svg)
      * @param {number} deltaWidth - Not used anymore (kept for compatibility)
@@ -165,6 +245,14 @@ export default function FloorSelector() {
             className: className
         });
         
+        // CRITICAL STEP 1: Reset transform FIRST, before any other operations
+        // This prevents reading transformed dimensions and accumulating scale
+        resetFloorplanTransform(floorplanElement);
+        
+        // Get natural dimensions (before any transforms) for logging/debugging
+        const naturalDims = getNaturalDimensions(floorplanElement);
+        console.log('[FloorPlan] Natural dimensions (untransformed):', naturalDims);
+        
         // FIX: Use CSS-based sizing instead of fixed pixels to prevent overflow
         // Remove any inline width/height that could cause overflow
         floorplanElement.style.width = '';
@@ -172,9 +260,8 @@ export default function FloorSelector() {
         floorplanElement.style.maxWidth = '';
         floorplanElement.style.maxHeight = '';
         
-        // CRITICAL: Always reset transform to prevent zoom accumulation
-        floorplanElement.style.transform = 'none';
-        floorplanElement.style.transformOrigin = 'center center';
+        // CRITICAL STEP 2: Ensure transform stays reset (defense in depth)
+        resetFloorplanTransform(floorplanElement);
         
         // Maintain aspect ratio - CSS will handle sizing via max-width/max-height
         if (elementType === 'img') {
@@ -193,9 +280,9 @@ export default function FloorSelector() {
         let allSlides = visualBlock.querySelectorAll('.floorplan');
         allSlides.forEach((slide) => {
             slide.classList.remove('active');
-            // Reset transforms when hiding to prevent zoom accumulation
-            slide.style.transform = 'none';
-            slide.style.transformOrigin = 'center center';
+            // CRITICAL: Reset transforms when hiding to prevent zoom accumulation
+            // Use comprehensive reset function instead of simple style assignment
+            resetFloorplanTransform(slide);
         });
     }
 
@@ -354,15 +441,18 @@ export default function FloorSelector() {
                 
                 document.querySelector('.js-floors').classList.remove('has-second-floor');
                 
-                // Reset all floorplan transforms before switching to prevent zoom issues
+                // CRITICAL: Reset ALL floorplan transforms BEFORE switching to prevent zoom accumulation
+                // This must happen synchronously before any other operations
                 let allFloorplans = visualBlock.querySelectorAll('.floorplan');
                 console.log('[FloorPlan] Resetting', allFloorplans.length, 'existing floor plans');
                 allFloorplans.forEach(function(floorplan) {
-                    floorplan.style.transform = 'none';
-                    floorplan.style.transformOrigin = 'center center';
+                    resetFloorplanTransform(floorplan);
                 });
                 
+                // Replace SVG (async operation, but transform already reset)
                 replaceFloorplanSvg(targetPath[1]);
+                
+                // Get target floorplan AFTER resetting all transforms
                 let targetFloorplan =
                     visualBlock.querySelector('.floorplan.' + targetPath[1]);
                 
@@ -373,6 +463,10 @@ export default function FloorSelector() {
                         className: targetFloorplan.className
                     });
                     
+                    // CRITICAL: Reset transform on target BEFORE applying auto-fit
+                    // This ensures we're working with natural dimensions, not transformed ones
+                    resetFloorplanTransform(targetFloorplan);
+                    
                     // Calculate delta values (adjust these as needed)
                     // deltaWidth accounts for sidebar (260px) + margins (40px) = ~300px
                     // deltaHeight accounts for header + margins = ~150px
@@ -380,6 +474,7 @@ export default function FloorSelector() {
                     const deltaHeight = 150;
                     
                     // Apply auto-fitting dimensions based on window size
+                    // applyFloorplanAutoFit will reset transform again as defense in depth
                     applyFloorplanAutoFit(targetFloorplan, deltaWidth, deltaHeight);
                     
                     targetFloorplan.classList.add('active');
@@ -437,7 +532,9 @@ export default function FloorSelector() {
             resizeTimeout = setTimeout(function() {
                 const activeFloorplan = visualBlock.querySelector('.floorplan.active');
                 if (activeFloorplan) {
-                    console.log('[FloorPlan] Window resized, updating active floor plan dimensions');
+                    console.log('[FloorPlan] Window resized, resetting transform and updating dimensions');
+                    // CRITICAL: Reset transform on resize to prevent accumulation
+                    resetFloorplanTransform(activeFloorplan);
                     const deltaWidth = 300;
                     const deltaHeight = 150;
                     applyFloorplanAutoFit(activeFloorplan, deltaWidth, deltaHeight);
@@ -703,7 +800,9 @@ export default function FloorSelector() {
         // Check if SVG was already replaced - if so, skip replacement
         var existingSvg = document.querySelector('svg.floorplan.' + targetClass);
         if (existingSvg) {
-            console.log('[FloorPlan] SVG already exists, applying auto-fit to existing SVG');
+            console.log('[FloorPlan] SVG already exists, resetting transform and applying auto-fit');
+            // CRITICAL: Reset transform BEFORE applying auto-fit to prevent accumulation
+            resetFloorplanTransform(existingSvg);
             // SVG already exists, apply auto-fitting dimensions
             const deltaWidth = 300;
             const deltaHeight = 150;
@@ -761,6 +860,10 @@ export default function FloorSelector() {
                     console.log('[FloorPlan] Replacing img with SVG for:', targetClass);
                     img.parentNode.replaceChild(svg, img);
                     console.log('[FloorPlan] SVG replacement completed');
+                    
+                    // CRITICAL: Reset transform immediately after replacement, before auto-fit
+                    // This ensures the new SVG starts with no transforms
+                    resetFloorplanTransform(svg);
                     
                     // Apply auto-fitting dimensions after SVG replacement
                     const deltaWidth = 300;
