@@ -195,6 +195,7 @@
         </div>
         <img class="floorplan l1" src="/images/floorplans/l1.svg" loading="lazy">
         <img class="floorplan l2" src="/images/floorplans/l2.svg" loading="lazy">
+        <img class="floorplan l3" src="/images/floorplans/l3.svg" loading="lazy">
     </div>
 
     <aside class="sidebar">
