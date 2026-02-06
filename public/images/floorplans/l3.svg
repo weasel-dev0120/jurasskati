@@ -181,7 +181,7 @@
 </g>
 </g>
 </g>
-<g data-target="loft-l3_5" class="action apt l3-5">
+<g data-target="loft-l3_4" class="action apt l3-4">
 <rect class="bg" x="1539.86" y="385.111" width="118.311" height="179.755"/>
 <g id="04">
 <path id="back_4" d="M1539.86 385.111L1658.15 385.111V413.524H1688.88V466.291H1654.67V564.866H1539.86V385.111Z" fill="black"/>
@@ -249,9 +249,9 @@
 </g>
 </g>
 </g>
-<g data-target="loft-l3_9" class="action apt l3-9">
-<rect class="bg" x="1129.32" y="1028.75" width="207.588" height="111.332"/>
-<g id="09">
+<g data-target="loft-l3_5" class="action apt l3-5">
+<rect class="bg" x="1734.69" y="348" width="198.311" height="113.652"/>
+<g id="05">
 <rect id="background" x="1734.69" y="348" width="198.311" height="113.652" fill="black"/>
 <g id="walls_5">
 <path id="Rectangle 2726" d="M1717.29 375.833H1734.69V479.047H1717.29V375.833Z" fill="#4A4E54"/>
@@ -272,6 +272,8 @@
 <path id="Vector_140" d="M1753.82 460.492L1754.48 460.492L1754.48 402.506L1734.69 402.506M1753.81 402.506L1753.81 426.281L1753.81 460.492L1733.53 460.492M1744.42 402.506L1744.42 410.624M1744.42 460.422L1744.42 410.624M1751.34 424.467L1737.01 424.576M1751.33 427.905L1737.02 428.974M1751.17 434.209L1737.17 430.488M1751.24 437.688L1737.1 434.832M1751.25 441.532L1737.1 438.812M1751.34 444.264L1737.01 443.912M1751.33 447.473L1737.02 448.529M1751.27 453.129L1737.08 450.706M1751.34 421.062L1737.01 419.902M1751.27 418.163L1737.17 415.843M1737.02 413.524L1751.27 413.524M1737.01 458.173L1751.33 454.286M1744.42 410.624L1751.33 411.504M1744.42 410.624L1737.17 409.465M1751.34 407.145L1737.17 407.725" stroke="#B1B1B1" stroke-width="0.579856" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+<g data-target="loft-l3_9" class="action apt l3-9">
+<rect class="bg" x="1129.32" y="1028.75" width="207.588" height="111.332"/>
 <g id="09">
 <rect id="back_5" x="1129.32" y="1028.75" width="207.588" height="111.332" fill="black"/>
 <g id="walls_6">
@@ -288,6 +290,7 @@
 <g id="other_5">
 <path id="Vector_141" d="M1259.2 1135.85L1259.2 1172.56C1234.88 1172.56 1224.41 1154.21 1224.41 1135.44" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
 <path id="Vector_142" d="M1190.78 1135.85L1190.78 1172.56C1168.08 1172.56 1158.31 1154.21 1158.31 1135.44" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
+</g>
 </g>
 </g>
 </g>
