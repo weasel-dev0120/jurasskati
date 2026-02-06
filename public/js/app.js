@@ -231,8 +231,9 @@ function FloorSelector() {
     if (targetPath[1]) {
       if (targetPath[0] == 'apt' || targetPath[0] == 'loft') {
         var aptPlans = targetSlide.querySelectorAll('.aptplan');
+        var activePlan = targetSlide.querySelector('.aptplan[data-target="' + target + '"]');
         for (var i = 0; i < aptPlans.length; i++) {
-          if (aptPlans[i].classList.contains(targetPath[1])) {
+          if (aptPlans[i] === activePlan) {
             aptPlans[i].classList.add('active');
             if (aptPlans[i].classList.contains('has-second-floor')) {
               document.querySelector('.js-floors').classList.add('has-second-floor');

@@ -235,7 +235,7 @@
         	
             @if ($flat->type == 'apartment')         
 		
-                <div class="aptplan {{ $flat->getLocationClasses() }}@if ($flat->has_second_floor) has-second-floor @endif">
+                <div class="aptplan {{ $flat->getLocationClasses() }}@if ($flat->has_second_floor) has-second-floor @endif" data-target="{{ $flat->type == 'apartment' ? 'apt' : 'loft' }}-{{ $flat->getFloorplanId() }}">
                     <img class="compass" src="/images/floorplans/compass-lf.svg" alt="">
                     @if ($flat->has_second_floor)                    	
                         <picture class="plan" data-label="@lang('Apartment level 1')">
@@ -478,7 +478,7 @@
         	
             @if ($flat->type == 'loft')         
 		
-                <div class="aptplan {{ $flat->getLocationClasses() }}@if ($flat->has_second_floor) has-second-floor @endif">
+                <div class="aptplan {{ $flat->getLocationClasses() }}@if ($flat->has_second_floor) has-second-floor @endif" data-target="{{ $flat->type == 'apartment' ? 'apt' : 'loft' }}-{{ $flat->getFloorplanId() }}">
                     <img class="compass" src="/images/floorplans/compass-lf.svg" alt="">
                     @if ($flat->has_second_floor)                    	
                         <picture class="plan" data-label="@lang('Apartment level 1')">
