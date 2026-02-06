@@ -53,39 +53,46 @@ class PublicController extends BasePublicController
 
         // Determine total number of floors and collect floor images
         $floorImages = [];
-        $floorImages[] = $model->image->path; // Floor 1
         
-        if ($model->has_second_floor && $model->second_image) {
-            $floorImages[] = $model->second_image->path; // Floor 2
-        }
-        
-        // Check for third floor - try multiple methods
-        $thirdFloorImage = null;
-        // Method 1: Check if third_image_id exists (for future database support)
-        if (isset($model->third_image_id) && $model->third_image_id) {
-            try {
-                $thirdImage = $model->third_image;
-                if ($thirdImage && $thirdImage->path) {
-                    $thirdFloorImage = $thirdImage->path;
+        // For lofts, find all related floors with the same floor_location
+        if ($model->type == 'loft') {
+            // Find the main loft record (usually on floor 1)
+            $mainLoft = $model;
+            if ($model->floor != 1) {
+                // If this is not floor 1, find the floor 1 record
+                $mainLoft = Flat::where('type', 'loft')
+                    ->where('floor', 1)
+                    ->where('floor_location', $model->floor_location)
+                    ->first();
+                if (!$mainLoft) {
+                    $mainLoft = $model; // Fallback to current model
                 }
-            } catch (\Exception $e) {
-                // third_image relationship might not exist, continue to next method
             }
-        }
-        // Method 2: For lofts, check if there's a related flat on building floor 3 with same location
-        if (!$thirdFloorImage && $model->type == 'loft' && $model->has_second_floor) {
-            // Find flats on building floor 3 with same floor_location
-            $relatedFlat = Flat::where('type', 'loft')
+            
+            // Add floor 1 image
+            if ($mainLoft->image && $mainLoft->image->path) {
+                $floorImages[] = $mainLoft->image->path;
+            }
+            
+            // Add floor 2 image if exists
+            if ($mainLoft->has_second_floor && $mainLoft->second_image && $mainLoft->second_image->path) {
+                $floorImages[] = $mainLoft->second_image->path;
+            }
+            
+            // Check for floor 3 - look for a flat on building floor 3 with same floor_location
+            $thirdFloorFlat = Flat::where('type', 'loft')
                 ->where('floor', 3)
-                ->where('floor_location', $model->floor_location)
+                ->where('floor_location', $mainLoft->floor_location)
                 ->first();
-            if ($relatedFlat && $relatedFlat->image && $relatedFlat->image->path) {
-                $thirdFloorImage = $relatedFlat->image->path;
+            if ($thirdFloorFlat && $thirdFloorFlat->image && $thirdFloorFlat->image->path) {
+                $floorImages[] = $thirdFloorFlat->image->path;
             }
-        }
-        
-        if ($thirdFloorImage) {
-            $floorImages[] = $thirdFloorImage; // Floor 3
+        } else {
+            // For apartments, use existing logic
+            $floorImages[] = $model->image->path; // Floor 1
+            if ($model->has_second_floor && $model->second_image) {
+                $floorImages[] = $model->second_image->path; // Floor 2
+            }
         }
         
         $totalFloors = count($floorImages);

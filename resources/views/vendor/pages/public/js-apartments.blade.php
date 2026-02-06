@@ -152,6 +152,7 @@
                             data-price="{{ $flat->price }}"
                             data-id="{{ $flat->getFloorplanId() }}"
                             data-id2="{{ $flat->getSecondFloorplanId() }}"
+                            data-id3="{{ $flat->getThirdFloorplanId() }}"
                             data-number="{{ $flat->number }}"
                             data-status="@if($flat->isSold()){{ __('sold') }}@elseif($flat->isReserved()){{ __('reserved') }}@elseif($flat->isOnRequest()){{ __('On request') }}@else{{ __('available') }}@endif"
                             data-locations="{{ $flat->getLocationClasses() }}"

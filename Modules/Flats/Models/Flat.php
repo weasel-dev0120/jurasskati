@@ -100,8 +100,38 @@ class Flat extends Base
                 ' ' . mb_strtolower(mb_substr($this->type, 0, 1))
                 . ($this->floor + 1)
                 . '_' . $this->second_floor_location;
+            
+            // Check if this loft has a third floor (for lofts starting on floor 1)
+            if ($this->type == 'loft' && $this->floor == 1) {
+                // Check if there's a related flat on building floor 3 with same floor_location
+                // Use exists() for better performance
+                $hasThirdFloor = Flat::where('type', 'loft')
+                    ->where('floor', 3)
+                    ->where('floor_location', $this->floor_location)
+                    ->exists();
+                if ($hasThirdFloor) {
+                    $value .= ' ' . mb_strtolower(mb_substr($this->type, 0, 1))
+                        . '3_' . $this->floor_location;
+                }
+            }
         }
         return $value;
+    }
+    
+    public function getThirdFloorplanId(): string
+    {
+        if ($this->type == 'loft' && $this->floor == 1 && $this->has_second_floor) {
+            $thirdFloorFlat = Flat::where('type', 'loft')
+                ->where('floor', 3)
+                ->where('floor_location', $this->floor_location)
+                ->first();
+            if ($thirdFloorFlat) {
+                return
+                    mb_strtolower(mb_substr($this->type, 0, 1))
+                    . '3_' . $this->floor_location;
+            }
+        }
+        return '';
     }
 
     public function isAvailable(): bool
