@@ -110,6 +110,9 @@
     <img class="js-floors-background" src="/images/lofti-floors.jpg" alt="{{ $loft_title }}">
 
     <svg class="js-floors-overlay" viewBox="0 0 1440 790" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g class="floor action" data-target="lfloors-l3" id="floor-3" style="mix-blend-mode:hard-light">
+        <path d="M1046 260L545.5 235V290L1046 335V328L1330.5 285V240L1046 260Z" fill="#99B3D2" fill-opacity="0.8"/>
+        </g>
         <g class="floor action" data-target="lfloors-l2" id="floor-2" style="mix-blend-mode:hard-light">
         <path d="M1046 335L545.5 308.5V366L1046 419.5V410.5L1330.5 362V313.5L1046 335Z" fill="#99B3D2" fill-opacity="0.8"/>
         </g>
@@ -123,6 +126,9 @@
         <ul class="menu">
             <li>
                 <a class="action" href="#" data-target="buildings">@lang('Select building')</a>
+            </li>
+            <li class="">
+                <a class="action" href="#" data-target="lfloors-l3">@lang('Loft floor 3')</a>
             </li>
             <li class="">
                 <a class="action" href="#" data-target="lfloors-l2">@lang('Loft floor 2')</a>
@@ -205,6 +211,9 @@
         <ul class="menu">
             <li>
                 <a class="action" href="#" data-target="lofts">@lang('Close floor plans')</a>
+            </li>
+            <li class="d-none d-md-block">
+                <a class="action" href="#" data-target="lfloors-l3">@lang('Loft floor 3')</a>
             </li>
             <li class="d-none d-md-block">
                 <a class="action" href="#" data-target="lfloors-l2">@lang('Loft floor 2')</a>
@@ -561,6 +570,9 @@
         <ul class="menu">
             <li>
                 <a class="action close" href="#" data-target="lfloors-l1">@lang('Close loft')</a>
+            </li>
+            <li class="d-none d-md-block">
+                <a class="action" href="#" data-target="lfloors-l3">@lang('Loft floor 3')</a>
             </li>
             <li class="d-none d-md-block">
                 <a class="action" href="#" data-target="lfloors-l2">@lang('Loft floor 2')</a>
