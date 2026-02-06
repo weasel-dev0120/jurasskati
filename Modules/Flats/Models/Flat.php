@@ -100,38 +100,8 @@ class Flat extends Base
                 ' ' . mb_strtolower(mb_substr($this->type, 0, 1))
                 . ($this->floor + 1)
                 . '_' . $this->second_floor_location;
-            
-            // Check if this loft has a third floor (for lofts starting on floor 1)
-            if ($this->type == 'loft' && $this->floor == 1) {
-                // Check if there's a related flat on building floor 3 with same floor_location
-                // Use exists() for better performance
-                $hasThirdFloor = Flat::where('type', 'loft')
-                    ->where('floor', 3)
-                    ->where('floor_location', $this->floor_location)
-                    ->exists();
-                if ($hasThirdFloor) {
-                    $value .= ' ' . mb_strtolower(mb_substr($this->type, 0, 1))
-                        . '3_' . $this->floor_location;
-                }
-            }
         }
         return $value;
-    }
-    
-    public function getThirdFloorplanId(): string
-    {
-        if ($this->type == 'loft' && $this->floor == 1 && $this->has_second_floor) {
-            $thirdFloorFlat = Flat::where('type', 'loft')
-                ->where('floor', 3)
-                ->where('floor_location', $this->floor_location)
-                ->first();
-            if ($thirdFloorFlat) {
-                return
-                    mb_strtolower(mb_substr($this->type, 0, 1))
-                    . '3_' . $this->floor_location;
-            }
-        }
-        return '';
     }
 
     public function isAvailable(): bool
@@ -162,6 +132,45 @@ class Flat extends Base
     public function getLivingArea()
     {
         return $this->total_area - $this->outdoor_area;
+    }
+
+    /**
+     * Get all floor images for this apartment.
+     * Returns an array of floor image paths, ordered from first floor to last.
+     * 
+     * @return array Array of image paths, e.g., ['path/to/image1.jpg', 'path/to/image2.jpg']
+     */
+    public function getFloorImages(): array
+    {
+        $floorImages = [];
+        
+        // Always include the first floor image if it exists
+        if ($this->image && $this->image->path) {
+            $floorImages[] = $this->image->path;
+        }
+        
+        // Include second floor image if it exists
+        if ($this->has_second_floor && $this->second_image && $this->second_image->path) {
+            $floorImages[] = $this->second_image->path;
+        }
+        
+        // Future: Add support for third_image, fourth_image, etc. here
+        // Example:
+        // if ($this->has_third_floor && $this->third_image && $this->third_image->path) {
+        //     $floorImages[] = $this->third_image->path;
+        // }
+        
+        return $floorImages;
+    }
+
+    /**
+     * Get the total number of floors for this apartment.
+     * 
+     * @return int Number of floors (minimum 1)
+     */
+    public function getTotalFloors(): int
+    {
+        return count($this->getFloorImages());
     }
 
     /**

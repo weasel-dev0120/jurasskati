@@ -28,6 +28,9 @@ class PublicController extends BasePublicController
     public function download($id)
     {
         $model = Flat::findOrFail($id);
+        
+        // Load relationships
+        $model->load(['image', 'second_image']);
 
         $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
         $fontDirs = $defaultConfig['fontDir'];
@@ -51,54 +54,22 @@ class PublicController extends BasePublicController
             'margin_right' => 10,
         ]);
 
-        // Determine total number of floors and collect floor images
-        $floorImages = [];
-        
-        // For lofts, find all related floors with the same floor_location
-        if ($model->type == 'loft') {
-            // Find the main loft record (usually on floor 1)
-            $mainLoft = $model;
-            if ($model->floor != 1) {
-                // If this is not floor 1, find the floor 1 record
-                $mainLoft = Flat::where('type', 'loft')
-                    ->where('floor', 1)
-                    ->where('floor_location', $model->floor_location)
-                    ->first();
-                if (!$mainLoft) {
-                    $mainLoft = $model; // Fallback to current model
-                }
-            }
-            
-            // Add floor 1 image
-            if ($mainLoft->image && $mainLoft->image->path) {
-                $floorImages[] = $mainLoft->image->path;
-            }
-            
-            // Add floor 2 image if exists
-            if ($mainLoft->has_second_floor && $mainLoft->second_image && $mainLoft->second_image->path) {
-                $floorImages[] = $mainLoft->second_image->path;
-            }
-            
-            // Check for floor 3 - look for a flat on building floor 3 with same floor_location
-            $thirdFloorFlat = Flat::where('type', 'loft')
-                ->where('floor', 3)
-                ->where('floor_location', $mainLoft->floor_location)
-                ->first();
-            if ($thirdFloorFlat && $thirdFloorFlat->image && $thirdFloorFlat->image->path) {
-                $floorImages[] = $thirdFloorFlat->image->path;
-            }
-        } else {
-            // For apartments, use existing logic
-            $floorImages[] = $model->image->path; // Floor 1
-            if ($model->has_second_floor && $model->second_image) {
-                $floorImages[] = $model->second_image->path; // Floor 2
-            }
-        }
-        
+        // Get all floor images dynamically
+        $floorImages = $model->getFloorImages();
         $totalFloors = count($floorImages);
-
-        // Add all floors to PDF
+        
+        // Generate a page for each floor
         foreach ($floorImages as $index => $imagePath) {
+            $level = $index + 1;
+            
+            // Set footer with page numbers if there are multiple floors
+            if ($totalFloors > 1) {
+                $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+            } else {
+                $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%"></td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+            }
+            
+            // Add a new page for floors after the first one
             if ($index > 0) {
                 $mpdf->AddPage();
             }
@@ -107,16 +78,11 @@ class PublicController extends BasePublicController
                 ->with([
                     'model' => $model,
                     'image' => $imagePath,
-                    'level' => $index + 1,
+                    'level' => $level,
                     'totalFloors' => $totalFloors,
                 ])
                 ->render();
             $mpdf->WriteHTML($html);
-            
-            // Set footer with page numbers (only after first page)
-            if ($index == 0) {
-                $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
-            }
         }
 
         $filename = str_replace('/', '-', $model->number);

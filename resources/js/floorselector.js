@@ -30,27 +30,6 @@ export default function FloorSelector() {
         let row =
             document
                 .querySelector('.js-flats-table tr[data-locations~="' + target + '"]');
-        
-        // If not found and target is floor 3 (l3_*), try to find the main loft record (floor 1)
-        if (!row && /^l3_/.test(target)) {
-            // Extract floor_location from target (e.g., l3_1 -> 1)
-            let match = target.match(/^l3_(\d+)/);
-            if (match) {
-                let floorLocation = match[1];
-                // Find the main loft record on floor 1 with same floor_location
-                let allRows = document.querySelectorAll('.js-flats-table tr[data-type="loft"]');
-                for (let i = 0; i < allRows.length; i++) {
-                    let testRow = allRows[i];
-                    let locations = testRow.dataset.locations || '';
-                    // Check if this row has l1_X where X matches floor_location
-                    if (locations.includes('l1_' + floorLocation) || locations.includes(' l1_' + floorLocation)) {
-                        row = testRow;
-                        break;
-                    }
-                }
-            }
-        }
-        
         if ( ! row)
             return false;
         let fields = ['number', 'floor', 'status', 'rooms', 'area', 'pricefmt', 'typetitle'];
@@ -62,27 +41,8 @@ export default function FloorSelector() {
         });
         let levelRow = flatInfoPopup.querySelector('.level-row');
         let levelCell = flatInfoPopup.querySelector('.level');
-        
-        // Determine which floor/level this target represents
-        // Check if target matches floor 3 pattern (l3_*)
-        let isFloor3 = /^l3_/.test(target);
-        let isFloor2 = row.dataset.id2 && target == row.dataset.id2;
-        let isFloor3Id = row.dataset.id3 && target == row.dataset.id3;
-        
-        if (row.dataset.id2 || isFloor3 || isFloor3Id) {
-            levelRow.classList.remove('d-none');
-            if (isFloor3 || isFloor3Id) {
-                // Floor 3 (loft floor 3)
-                if (levelCell) {
-                    levelCell.innerText = '3';
-                }
-                let floorElement = flatInfoPopup.querySelector('.floor');
-                if (floorElement) {
-                    // For floor 3, show building floor 3
-                    floorElement.innerText = '3';
-                }
-            } else if (isFloor2) {
-                // Floor 2
+        if (row.dataset.id2) {
+            if (target == row.dataset.id2) {
                 if (levelCell) {
                     levelCell.innerText = '2';
                 }
@@ -91,11 +51,11 @@ export default function FloorSelector() {
                     floorElement.innerText = parseInt(row.dataset.floor) + 1;
                 }
             } else {
-                // Floor 1
                 if (levelCell) {
                     levelCell.innerText = '1';
                 }
             }
+            levelRow.classList.remove('d-none');
         } else {
             levelRow.classList.add('d-none');
             levelCell.innerText = '—';
@@ -598,12 +558,6 @@ export default function FloorSelector() {
                     svg.setAttribute('role', 'img');
                     img.parentNode.replaceChild(svg, img);
                     markUnavailableOnFloorplans();
-                    
-                    // Set up event listeners for the new SVG action elements
-                    let newActions = svg.querySelectorAll('.action');
-                    [...newActions].forEach((actionElement) => {
-                        setupActionEvents(actionElement);
-                    });
                 }
 
             }

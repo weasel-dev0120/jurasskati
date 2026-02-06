@@ -84,7 +84,7 @@
             @if (isset($totalFloors) && $totalFloors > 1)
             <tr class="level-row">
                 <td>@lang('level')</td>
-                <td align="right" class="level">{{ $level }} @lang('of') {{ $totalFloors }}</td>
+                <td align="right" class="level">{{ $level }} / {{ $totalFloors }}</td>
             </tr>
             @endif
             <tr>
