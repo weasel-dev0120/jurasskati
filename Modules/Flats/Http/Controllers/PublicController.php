@@ -84,27 +84,7 @@ class PublicController extends BasePublicController
         // Set footer for pagination
         $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . ($_SERVER['HTTP_HOST'] ?? '') . '</td></tr></table>');
 
-        // Add all building floor plans first
-        $firstPage = true;
-        foreach ($floorPlans as $floorPlan) {
-            if (!$firstPage) {
-                $mpdf->AddPage();
-            }
-            $firstPage = false;
-            
-            $html = view('flats::public.pdf-floorplan')
-                ->with([
-                    'floorplan' => $floorPlan['file'],
-                    'floorNumber' => $floorPlan['floor'],
-                    'type' => $floorPlan['type'],
-                    'lang' => $lang,
-                ])
-                ->render();
-            $mpdf->WriteHTML($html);
-        }
-
-        // Add apartment's own floor plan pages
-        $mpdf->AddPage();
+        // Add apartment's own floor plan pages FIRST
         $html = view('flats::public.pdf')
             ->with([
                 'model' => $model,
@@ -123,6 +103,36 @@ class PublicController extends BasePublicController
                     'image' => $model->second_image->path,
                     'level' => 2,
                     'lang' => $lang,
+                ])
+                ->render();
+            $mpdf->WriteHTML($html);
+        }
+
+        // Add all building floor plans after apartment's own floor plans
+        foreach ($floorPlans as $floorPlan) {
+            $mpdf->AddPage();
+            
+            // Read SVG file content to embed it inline for styling
+            $svgPath = public_path('images/floorplans/' . $floorPlan['file']);
+            $svgContent = '';
+            if (file_exists($svgPath)) {
+                $svgContent = file_get_contents($svgPath);
+                // Add inline style to color .bg elements
+                $svgContent = preg_replace(
+                    '/(<svg[^>]*>)/',
+                    '$1<style type="text/css"><![CDATA[.bg{fill:#E8E8E8 !important;}.apt.unavailable .bg,.apt.sold .bg{fill:#979797 !important;}]]></style>',
+                    $svgContent,
+                    1
+                );
+            }
+            
+            $html = view('flats::public.pdf-floorplan')
+                ->with([
+                    'floorplan' => $floorPlan['file'],
+                    'floorNumber' => $floorPlan['floor'],
+                    'type' => $floorPlan['type'],
+                    'lang' => $lang,
+                    'svgContent' => $svgContent,
                 ])
                 ->render();
             $mpdf->WriteHTML($html);

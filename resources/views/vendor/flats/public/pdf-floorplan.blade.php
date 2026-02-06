@@ -26,7 +26,8 @@
             bottom: 0mm;
             right: 0mm;
         }
-        .plan img {
+        .plan img,
+        .plan svg {
             width: 100%;
             height: 100%;
             object-fit: contain;
@@ -48,6 +49,14 @@
             font-size: 2em;
             padding-bottom: 0.5em;
         }
+        /* Style SVG floor plan elements - ensure .bg elements are colored */
+        .plan svg .bg {
+            fill: #E8E8E8 !important;
+        }
+        .plan svg .apt.unavailable .bg,
+        .plan svg .apt.sold .bg {
+            fill: #979797 !important;
+        }
     </style>
 </head>
 <body>
@@ -64,7 +73,11 @@
     </div>
     @endif
     <div class="plan">
-        <img src="{{ public_path('images/floorplans/'.$floorplan) }}" alt="">
+        @if (!empty($svgContent))
+            {!! $svgContent !!}
+        @else
+            <img src="{{ public_path('images/floorplans/'.$floorplan) }}" alt="">
+        @endif
     </div>
     <div class="floor-label">
         <div class="floor-number">
