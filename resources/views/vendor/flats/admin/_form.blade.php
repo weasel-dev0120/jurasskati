@@ -3,28 +3,28 @@
     <script src="{{ asset('components/ckeditor4/config-full.js') }}"></script>
     <script>
         (function(){
-            function onSecondFloorChange() {
-                let checkbox = document.querySelector('#has_second_floor');
-                let locationInput = 
-                    document.querySelector('#second_floor_location').parentElement;
-                let secondImageInput = 
-                    document.querySelector('#second_image_id').parentElement;
-                if (checkbox.checked) {
-                    locationInput.style.opacity = 1;
-                    secondImageInput.style.opacity = 1;
-                    locationInput.style.pointerEvents = 'all';
-                    secondImageInput.style.pointerEvents = 'all';
-                } else {
-                    locationInput.style.opacity = 0;
-                    secondImageInput.style.opacity = 0;
-                    locationInput.style.pointerEvents = 'none';
-                    secondImageInput.style.pointerEvents = 'none';
+            function toggleVisibility(checkboxId, locationSelector, imageSelector) {
+                let checkbox = document.querySelector(checkboxId);
+                if (!checkbox) return;
+                let locationInput = document.querySelector(locationSelector)?.parentElement;
+                let imageInput = document.querySelector(imageSelector)?.parentElement;
+                function update() {
+                    let show = checkbox.checked;
+                    if (locationInput) {
+                        locationInput.style.opacity = show ? 1 : 0;
+                        locationInput.style.pointerEvents = show ? 'all' : 'none';
+                    }
+                    if (imageInput) {
+                        imageInput.style.opacity = show ? 1 : 0;
+                        imageInput.style.pointerEvents = show ? 'all' : 'none';
+                    }
                 }
+                update();
+                checkbox.addEventListener('click', update);
             }
             window.addEventListener('DOMContentLoaded', (ev) => {
-                onSecondFloorChange();
-                let checkbox = document.querySelector('#has_second_floor');
-                checkbox.addEventListener('click', onSecondFloorChange);
+                toggleVisibility('#has_second_floor', '#second_floor_location', '#second_image_id');
+                toggleVisibility('#has_third_floor', '#third_floor_location', '#third_image_id');
             });
         }).call();
     </script>
@@ -101,6 +101,14 @@
             {!! BootForm::select(__('Second floor location'), 'second_floor_location')->options(array_combine($r = range(1,50), $r)) !!}
         </div>
     </div>
+    <div class="row gx-3 align-items-center">
+        <div class="col-md-6">
+            {!! BootForm::checkbox(__('Has third floor'), 'has_third_floor') !!}
+        </div>
+        <div class="col-md-6">
+            {!! BootForm::select(__('Third floor location'), 'third_floor_location')->options(array_combine($r = range(1,50), $r)) !!}
+        </div>
+    </div>
 
     <br>
 
@@ -111,6 +119,9 @@
         </div>
         <div class="col-md-6">
             <file-field type="image" field="second_image_id" label="@lang('Second floor plan')" :init-file="{{ $model->second_image ?? 'null' }}"></file-field>
+        </div>
+        <div class="col-md-6">
+            <file-field type="image" field="third_image_id" label="@lang('Third floor plan')" :init-file="{{ $model->third_image ?? 'null' }}"></file-field>
         </div>
     </div>
     {{--<files-field :init-files="{{ $model->files }}"></files-field>--}}

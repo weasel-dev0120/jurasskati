@@ -71,6 +71,26 @@ class Flat extends Base
         return $this->belongsTo(File::class, 'second_image_id');
     }
 
+    // Relationship to third image (lofts with 3 levels)
+    public function third_image(): BelongsTo
+    {
+        return $this->belongsTo(File::class, 'third_image_id');
+    }
+
+    /**
+     * Number of floor plan pages for PDF: 1 for flats, 2–3 for lofts (by has_second_floor / has_third_floor).
+     */
+    public function getPdfLevelCount(): int
+    {
+        if ($this->has_third_floor ?? false) {
+            return 3;
+        }
+        if ($this->has_second_floor ?? false) {
+            return 2;
+        }
+        return 1;
+    }
+
     public function getFloorplanId(): string
     {
         return
@@ -85,9 +105,19 @@ class Flat extends Base
                 mb_strtolower(mb_substr($this->type, 0, 1))
                 . ($this->floor + 1)
                 . '_' . $this->second_floor_location;
-        } else {
-            return '';
         }
+        return '';
+    }
+
+    public function getThirdFloorplanId(): string
+    {
+        if ($this->has_third_floor) {
+            return
+                mb_strtolower(mb_substr($this->type, 0, 1))
+                . ($this->floor + 2)
+                . '_' . $this->third_floor_location;
+        }
+        return '';
     }
 
     public function getLocationClasses(): string
@@ -100,6 +130,12 @@ class Flat extends Base
                 ' ' . mb_strtolower(mb_substr($this->type, 0, 1))
                 . ($this->floor + 1)
                 . '_' . $this->second_floor_location;
+        }
+        if ($this->has_third_floor) {
+            $value .=
+                ' ' . mb_strtolower(mb_substr($this->type, 0, 1))
+                . ($this->floor + 2)
+                . '_' . $this->third_floor_location;
         }
         return $value;
     }

@@ -67,168 +67,44 @@ class PublicController extends BasePublicController
                 'autoLangToFont' => true,
             ]);
 
-            // Determine building type and floor plans
-            $isApartment = $model->type === 'apartment';
-            $floorPlans = [];
-            
-            if ($isApartment) {
-                // Apartments: floors 1-10 (a1.svg through a10.svg)
-                for ($i = 1; $i <= 10; $i++) {
-                    $floorPlans[] = [
-                        'file' => 'a' . $i . '.svg',
-                        'floor' => $i,
-                        'type' => 'apartment'
-                    ];
-                }
-            } else {
-                // Lofts: floors 1-3 (l1.svg through l3.svg)
-                for ($i = 1; $i <= 3; $i++) {
-                    $floorPlans[] = [
-                        'file' => 'l' . $i . '.svg',
-                        'floor' => $i,
-                        'type' => 'loft'
-                    ];
-                }
-            }
-
             // Set footer for pagination
             $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . ($_SERVER['HTTP_HOST'] ?? '') . '</td></tr></table>');
 
-            // Add apartment's own floor plan pages FIRST
+            // PDF contains only this flat/loft's own floor plan(s): 1 page for flats, 2–3 pages for lofts (by level count)
             $html = view('flats::public.pdf')
                 ->with([
                     'model' => $model,
-                    'image' => $model->image->path,
+                    'image' => $model->image?->path,
                     'level' => 1,
+                    'totalLevels' => $model->getPdfLevelCount(),
                     'lang' => $lang,
                 ])
                 ->render();
             $mpdf->WriteHTML($html);
 
-            if ($model->has_second_floor) {
+            if ($model->has_second_floor && $model->second_image) {
                 $mpdf->AddPage();
                 $html = view('flats::public.pdf')
                     ->with([
                         'model' => $model,
                         'image' => $model->second_image->path,
                         'level' => 2,
+                        'totalLevels' => $model->getPdfLevelCount(),
                         'lang' => $lang,
                     ])
                     ->render();
                 $mpdf->WriteHTML($html);
             }
 
-            // Add all building floor plans after apartment's own floor plans
-            foreach ($floorPlans as $floorPlan) {
+            if ($model->getAttribute('has_third_floor') && $model->getAttribute('third_image_id') && $model->third_image) {
                 $mpdf->AddPage();
-                
-                // Read SVG file content to embed it inline for styling
-                $svgPath = public_path('images/floorplans/' . $floorPlan['file']);
-                $svgContent = '';
-                if (file_exists($svgPath)) {
-                    $svgContent = file_get_contents($svgPath);
-                    $originalSvgContent = $svgContent; // Keep backup of original
-                    
-                    // Use DOMDocument to process SVG more efficiently
-                    // This avoids regex backtrack limit issues
-                    try {
-                        libxml_use_internal_errors(true);
-                        $dom = new \DOMDocument();
-                        // Preserve whitespace to maintain formatting
-                        $dom->preserveWhiteSpace = true;
-                        $dom->formatOutput = false;
-                        // Load with options to preserve all attributes and formatting
-                        $loaded = @$dom->loadXML($svgContent);
-                        
-                        if ($loaded && $dom->documentElement) {
-                            $svgRoot = $dom->documentElement;
-                            
-                            // Set default fill on root so mPDF renders like web (light grey, not black)
-                            if ($svgRoot->hasAttribute('fill') && $svgRoot->getAttribute('fill') === 'none') {
-                                $svgRoot->setAttribute('fill', '#E8E8E8');
-                            } elseif (!$svgRoot->hasAttribute('fill')) {
-                                $svgRoot->setAttribute('fill', '#E8E8E8');
-                            }
-                            
-                            // Inject inline style so .bg is forced to light grey (mPDF may respect this)
-                            $style = $dom->createElementNS('http://www.w3.org/2000/svg', 'style');
-                            $style->textContent = '.bg{fill:#E8E8E8 !important}.apt.unavailable .bg,.apt.sold .bg{fill:#979797 !important}';
-                            if ($svgRoot->firstChild) {
-                                $svgRoot->insertBefore($style, $svgRoot->firstChild);
-                            } else {
-                                $svgRoot->appendChild($style);
-                            }
-                            
-                            // Find all elements with class="bg" and set fill explicitly (for renderers that ignore CSS)
-                            $xpath = new \DOMXPath($dom);
-                            $xpath->registerNamespace('svg', 'http://www.w3.org/2000/svg');
-                            $bgElements = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " bg ")]');
-                            foreach ($bgElements as $element) {
-                                if (!$element->hasAttribute('fill')) {
-                                    $parent = $element->parentNode;
-                                    $hasUnavailable = false;
-                                    $hasSold = false;
-                                    while ($parent && $parent->nodeType === XML_ELEMENT_NODE) {
-                                        $class = $parent->getAttribute('class');
-                                        if (strpos($class, 'unavailable') !== false) {
-                                            $hasUnavailable = true;
-                                            break;
-                                        }
-                                        if (strpos($class, 'sold') !== false) {
-                                            $hasSold = true;
-                                            break;
-                                        }
-                                        $parent = $parent->parentNode;
-                                    }
-                                    $element->setAttribute('fill', ($hasUnavailable || $hasSold) ? '#979797' : '#E8E8E8');
-                                }
-                            }
-                            
-                            $processedSvgContent = $dom->saveXML($dom->documentElement);
-                            
-                            // Ensure we have valid SVG content
-                            if (!empty($processedSvgContent) && strlen($processedSvgContent) > 100 && strpos($processedSvgContent, '<svg') !== false) {
-                                $svgContent = $processedSvgContent;
-                            } else {
-                                $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $originalSvgContent);
-                            }
-                        } else {
-                            // If loading failed, use original content
-                            $svgContent = $originalSvgContent;
-                        }
-                        
-                        libxml_clear_errors();
-                    } catch (\Exception $e) {
-                        $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $originalSvgContent);
-                        libxml_clear_errors();
-                    }
-                    
-                    // Final check: if SVG content is empty, use original (without declaration)
-                    if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
-                        $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $originalSvgContent);
-                    }
-                } else {
-                    $svgContent = '';
-                }
-                
-                // Ensure we have valid SVG content before rendering
-                if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
-                    $fallbackPath = public_path('images/floorplans/' . $floorPlan['file']);
-                    if (file_exists($fallbackPath)) {
-                        $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', file_get_contents($fallbackPath));
-                    }
-                }
-                
-                // Always strip XML declaration so it never appears as text in the PDF
-                $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $svgContent);
-                
-                $html = view('flats::public.pdf-floorplan')
+                $html = view('flats::public.pdf')
                     ->with([
-                        'floorplan' => $floorPlan['file'],
-                        'floorNumber' => $floorPlan['floor'],
-                        'type' => $floorPlan['type'],
+                        'model' => $model,
+                        'image' => $model->third_image->path,
+                        'level' => 3,
+                        'totalLevels' => $model->getPdfLevelCount(),
                         'lang' => $lang,
-                        'svgContent' => $svgContent,
                     ])
                     ->render();
                 $mpdf->WriteHTML($html);
