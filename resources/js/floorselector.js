@@ -41,8 +41,31 @@ export default function FloorSelector() {
         });
         let levelRow = flatInfoPopup.querySelector('.level-row');
         let levelCell = flatInfoPopup.querySelector('.level');
-        if (row.dataset.id2) {
-            if (target == row.dataset.id2) {
+        
+        // Determine which floor/level this target represents
+        // Check if target matches floor 3 pattern (l3_*)
+        let isFloor3 = /^l3_/.test(target);
+        let isFloor2 = row.dataset.id2 && target == row.dataset.id2;
+        
+        if (row.dataset.id2 || isFloor3) {
+            levelRow.classList.remove('d-none');
+            if (isFloor3) {
+                // Floor 3 (loft floor 3)
+                if (levelCell) {
+                    levelCell.innerText = '3';
+                }
+                let floorElement = flatInfoPopup.querySelector('.floor');
+                if (floorElement) {
+                    // Extract floor number from target (e.g., l3_1 -> floor 3)
+                    let floorMatch = target.match(/^l(\d+)_/);
+                    if (floorMatch) {
+                        floorElement.innerText = parseInt(floorMatch[1]);
+                    } else {
+                        floorElement.innerText = parseInt(row.dataset.floor) + 2;
+                    }
+                }
+            } else if (isFloor2) {
+                // Floor 2
                 if (levelCell) {
                     levelCell.innerText = '2';
                 }
@@ -51,11 +74,11 @@ export default function FloorSelector() {
                     floorElement.innerText = parseInt(row.dataset.floor) + 1;
                 }
             } else {
+                // Floor 1
                 if (levelCell) {
                     levelCell.innerText = '1';
                 }
             }
-            levelRow.classList.remove('d-none');
         } else {
             levelRow.classList.add('d-none');
             levelCell.innerText = '—';
@@ -557,14 +580,13 @@ export default function FloorSelector() {
                     });
                     svg.setAttribute('role', 'img');
                     img.parentNode.replaceChild(svg, img);
-                    
-                    // Set up hover events for all action elements in the new SVG
-                    let actionElements = svg.querySelectorAll('.action');
-                    for (let i = 0; i < actionElements.length; i++) {
-                        setupActionEvents(actionElements[i]);
-                    }
-                    
                     markUnavailableOnFloorplans();
+                    
+                    // Set up event listeners for the new SVG action elements
+                    let newActions = svg.querySelectorAll('.action');
+                    [...newActions].forEach((actionElement) => {
+                        setupActionEvents(actionElement);
+                    });
                 }
 
             }
