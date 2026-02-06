@@ -141,21 +141,33 @@ class PublicController extends BasePublicController
                         $loaded = @$dom->loadXML($svgContent);
                         
                         if ($loaded && $dom->documentElement) {
-                            // Find all elements with class="bg" and add fill attribute ONLY if not already set
-                            $xpath = new \DOMXPath($dom);
-                            // Register default namespace
-                            $xpath->registerNamespace('svg', 'http://www.w3.org/2000/svg');
+                            $svgRoot = $dom->documentElement;
                             
-                            // Query for elements containing "bg" in class attribute
+                            // Set default fill on root so mPDF renders like web (light grey, not black)
+                            if ($svgRoot->hasAttribute('fill') && $svgRoot->getAttribute('fill') === 'none') {
+                                $svgRoot->setAttribute('fill', '#E8E8E8');
+                            } elseif (!$svgRoot->hasAttribute('fill')) {
+                                $svgRoot->setAttribute('fill', '#E8E8E8');
+                            }
+                            
+                            // Inject inline style so .bg is forced to light grey (mPDF may respect this)
+                            $style = $dom->createElementNS('http://www.w3.org/2000/svg', 'style');
+                            $style->textContent = '.bg{fill:#E8E8E8 !important}.apt.unavailable .bg,.apt.sold .bg{fill:#979797 !important}';
+                            if ($svgRoot->firstChild) {
+                                $svgRoot->insertBefore($style, $svgRoot->firstChild);
+                            } else {
+                                $svgRoot->appendChild($style);
+                            }
+                            
+                            // Find all elements with class="bg" and set fill explicitly (for renderers that ignore CSS)
+                            $xpath = new \DOMXPath($dom);
+                            $xpath->registerNamespace('svg', 'http://www.w3.org/2000/svg');
                             $bgElements = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " bg ")]');
                             foreach ($bgElements as $element) {
-                                // Only modify if fill attribute is not already set
                                 if (!$element->hasAttribute('fill')) {
-                                    // Check if parent has unavailable or sold class
                                     $parent = $element->parentNode;
                                     $hasUnavailable = false;
                                     $hasSold = false;
-                                    
                                     while ($parent && $parent->nodeType === XML_ELEMENT_NODE) {
                                         $class = $parent->getAttribute('class');
                                         if (strpos($class, 'unavailable') !== false) {
@@ -168,17 +180,10 @@ class PublicController extends BasePublicController
                                         }
                                         $parent = $parent->parentNode;
                                     }
-                                    
-                                    // Set fill color based on availability
-                                    if ($hasUnavailable || $hasSold) {
-                                        $element->setAttribute('fill', '#979797');
-                                    } else {
-                                        $element->setAttribute('fill', '#E8E8E8');
-                                    }
+                                    $element->setAttribute('fill', ($hasUnavailable || $hasSold) ? '#979797' : '#E8E8E8');
                                 }
                             }
                             
-                            // Save only the SVG element (no XML declaration - mPDF would render it as visible text)
                             $processedSvgContent = $dom->saveXML($dom->documentElement);
                             
                             // Ensure we have valid SVG content
