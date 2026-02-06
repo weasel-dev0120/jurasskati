@@ -127,6 +127,7 @@ class PublicController extends BasePublicController
                 $svgContent = '';
                 if (file_exists($svgPath)) {
                     $svgContent = file_get_contents($svgPath);
+                    $originalSvgContent = $svgContent; // Keep backup of original
                     
                     // Use DOMDocument to process SVG more efficiently
                     // This avoids regex backtrack limit issues
@@ -137,53 +138,88 @@ class PublicController extends BasePublicController
                         $dom->preserveWhiteSpace = true;
                         $dom->formatOutput = false;
                         // Load with options to preserve all attributes and formatting
-                        $dom->loadXML($svgContent);
+                        $loaded = @$dom->loadXML($svgContent);
                         
-                        // Find all elements with class="bg" and add fill attribute ONLY if not already set
-                        $xpath = new \DOMXPath($dom);
-                        // Register default namespace
-                        $xpath->registerNamespace('svg', 'http://www.w3.org/2000/svg');
-                        
-                        // Query for elements containing "bg" in class attribute
-                        $bgElements = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " bg ")]');
-                        foreach ($bgElements as $element) {
-                            // Only modify if fill attribute is not already set
-                            if (!$element->hasAttribute('fill')) {
-                                // Check if parent has unavailable or sold class
-                                $parent = $element->parentNode;
-                                $hasUnavailable = false;
-                                $hasSold = false;
-                                
-                                while ($parent && $parent->nodeType === XML_ELEMENT_NODE) {
-                                    $class = $parent->getAttribute('class');
-                                    if (strpos($class, 'unavailable') !== false) {
-                                        $hasUnavailable = true;
-                                        break;
+                        if ($loaded && $dom->documentElement) {
+                            // Find all elements with class="bg" and add fill attribute ONLY if not already set
+                            $xpath = new \DOMXPath($dom);
+                            // Register default namespace
+                            $xpath->registerNamespace('svg', 'http://www.w3.org/2000/svg');
+                            
+                            // Query for elements containing "bg" in class attribute
+                            $bgElements = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " bg ")]');
+                            foreach ($bgElements as $element) {
+                                // Only modify if fill attribute is not already set
+                                if (!$element->hasAttribute('fill')) {
+                                    // Check if parent has unavailable or sold class
+                                    $parent = $element->parentNode;
+                                    $hasUnavailable = false;
+                                    $hasSold = false;
+                                    
+                                    while ($parent && $parent->nodeType === XML_ELEMENT_NODE) {
+                                        $class = $parent->getAttribute('class');
+                                        if (strpos($class, 'unavailable') !== false) {
+                                            $hasUnavailable = true;
+                                            break;
+                                        }
+                                        if (strpos($class, 'sold') !== false) {
+                                            $hasSold = true;
+                                            break;
+                                        }
+                                        $parent = $parent->parentNode;
                                     }
-                                    if (strpos($class, 'sold') !== false) {
-                                        $hasSold = true;
-                                        break;
+                                    
+                                    // Set fill color based on availability
+                                    if ($hasUnavailable || $hasSold) {
+                                        $element->setAttribute('fill', '#979797');
+                                    } else {
+                                        $element->setAttribute('fill', '#E8E8E8');
                                     }
-                                    $parent = $parent->parentNode;
-                                }
-                                
-                                // Set fill color based on availability
-                                if ($hasUnavailable || $hasSold) {
-                                    $element->setAttribute('fill', '#979797');
-                                } else {
-                                    $element->setAttribute('fill', '#E8E8E8');
                                 }
                             }
+                            
+                            // Save XML preserving all original attributes and colors
+                            // Use saveXML() without arguments to get full document with XML declaration
+                            $processedSvgContent = $dom->saveXML();
+                            
+                            // Ensure we have valid SVG content
+                            // Check if it starts with <?xml or <svg
+                            if (!empty($processedSvgContent) && 
+                                strlen($processedSvgContent) > 100 && 
+                                (strpos($processedSvgContent, '<svg') !== false || strpos($processedSvgContent, '<?xml') !== false)) {
+                                $svgContent = $processedSvgContent;
+                            } else {
+                                // Fall back to original if processed content is invalid
+                                $svgContent = $originalSvgContent;
+                            }
+                        } else {
+                            // If loading failed, use original content
+                            $svgContent = $originalSvgContent;
                         }
                         
-                        // Save XML preserving all original attributes and colors
-                        // Use saveXML() without arguments to get full document with XML declaration
-                        $svgContent = $dom->saveXML();
                         libxml_clear_errors();
                     } catch (\Exception $e) {
                         // If DOMDocument processing fails, use original SVG content
                         // This ensures the PDF generation continues even if styling fails
+                        $svgContent = $originalSvgContent;
                         libxml_clear_errors();
+                    }
+                    
+                    // Final check: if SVG content is empty, use original
+                    if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
+                        $svgContent = $originalSvgContent;
+                    }
+                } else {
+                    // If file doesn't exist, set empty content
+                    $svgContent = '';
+                }
+                
+                // Ensure we have valid SVG content before rendering
+                if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
+                    // Try to read the file directly as fallback
+                    $fallbackPath = public_path('images/floorplans/' . $floorPlan['file']);
+                    if (file_exists($fallbackPath)) {
+                        $svgContent = file_get_contents($fallbackPath);
                     }
                 }
                 

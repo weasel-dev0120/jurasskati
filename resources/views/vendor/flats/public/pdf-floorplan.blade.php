@@ -96,12 +96,17 @@
     </div>
     @endif
     <div class="plan">
-        @if (!empty($svgContent))
+        @if (!empty($svgContent) && strlen(trim($svgContent)) > 100)
             <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                 {!! $svgContent !!}
             </div>
         @else
-            <img src="{{ public_path('images/floorplans/'.$floorplan) }}" alt="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            @php
+                $fallbackPath = public_path('images/floorplans/'.$floorplan);
+            @endphp
+            @if (file_exists($fallbackPath))
+                <img src="{{ $fallbackPath }}" alt="" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+            @endif
         @endif
     </div>
     <div class="floor-label">
