@@ -185,7 +185,7 @@ class PublicController extends BasePublicController
                             if (!empty($processedSvgContent) && strlen($processedSvgContent) > 100 && strpos($processedSvgContent, '<svg') !== false) {
                                 $svgContent = $processedSvgContent;
                             } else {
-                                $svgContent = self::stripXmlDeclaration($originalSvgContent);
+                                $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $originalSvgContent);
                             }
                         } else {
                             // If loading failed, use original content
@@ -194,13 +194,13 @@ class PublicController extends BasePublicController
                         
                         libxml_clear_errors();
                     } catch (\Exception $e) {
-                        $svgContent = self::stripXmlDeclaration($originalSvgContent);
+                        $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $originalSvgContent);
                         libxml_clear_errors();
                     }
                     
                     // Final check: if SVG content is empty, use original (without declaration)
                     if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
-                        $svgContent = self::stripXmlDeclaration($originalSvgContent);
+                        $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $originalSvgContent);
                     }
                 } else {
                     $svgContent = '';
@@ -210,12 +210,12 @@ class PublicController extends BasePublicController
                 if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
                     $fallbackPath = public_path('images/floorplans/' . $floorPlan['file']);
                     if (file_exists($fallbackPath)) {
-                        $svgContent = self::stripXmlDeclaration(file_get_contents($fallbackPath));
+                        $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', file_get_contents($fallbackPath));
                     }
                 }
                 
                 // Always strip XML declaration so it never appears as text in the PDF
-                $svgContent = self::stripXmlDeclaration($svgContent);
+                $svgContent = preg_replace('/<\?xml[^?]*\?>\s*/i', '', $svgContent);
                 
                 $html = view('flats::public.pdf-floorplan')
                     ->with([
@@ -234,24 +234,11 @@ class PublicController extends BasePublicController
             $filename = preg_replace('/[^A-Za-z0-9\-\_]/', '', $filename);
             $filename = preg_replace('/-+/', '-', $filename);
             $filename = 'JurasSkati_' . $filename . '_' . $lang . '.pdf';
-            return response()->streamDownload(function() use ($mpdf , $filename) {
+            return response()->streamDownload(function () use ($mpdf, $filename) {
                 echo $mpdf->Output($filename, 'D');
             }, $filename);
         } finally {
-            // Always restore original backtrack limit
             ini_set('pcre.backtrack_limit', $originalBacktrackLimit);
         }
-    }
-
-    /**
-     * Remove XML declaration from SVG content so it is not rendered as visible text in PDF.
-     */
-    private static function stripXmlDeclaration(string $svgContent): string
-    {
-        if (empty($svgContent)) {
-            return $svgContent;
-        }
-        // Remove <?xml ... ?> declaration (any encoding variant)
-        return preg_replace('/<\?xml[^?]*\?>\s*/i', '', $svgContent);
     }
 }
