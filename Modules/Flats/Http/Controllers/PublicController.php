@@ -28,9 +28,6 @@ class PublicController extends BasePublicController
     public function download($id)
     {
         $model = Flat::findOrFail($id);
-        
-        // Load relationships
-        $model->load(['image', 'second_image']);
 
         $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
         $fontDirs = $defaultConfig['fontDir'];
@@ -54,32 +51,24 @@ class PublicController extends BasePublicController
             'margin_right' => 10,
         ]);
 
-        // Get all floor images dynamically
-        $floorImages = $model->getFloorImages();
-        $totalFloors = count($floorImages);
-        
-        // Generate a page for each floor
-        foreach ($floorImages as $index => $imagePath) {
-            $level = $index + 1;
-            
-            // Set footer with page numbers if there are multiple floors
-            if ($totalFloors > 1) {
-                $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
-            } else {
-                $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%"></td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
-            }
-            
-            // Add a new page for floors after the first one
-            if ($index > 0) {
-                $mpdf->AddPage();
-            }
-            
+        $html = view('flats::public.pdf')
+            ->with([
+                'model' => $model,
+                'image' => $model->image->path,
+                'level' => 1,
+            ])
+            ->render();
+        $mpdf->WriteHTML($html);
+        $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%"></td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+
+        if ($model->has_second_floor) {
+            $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+            $mpdf->AddPage();
             $html = view('flats::public.pdf')
                 ->with([
                     'model' => $model,
-                    'image' => $imagePath,
-                    'level' => $level,
-                    'totalFloors' => $totalFloors,
+                    'image' => $model->second_image->path,
+                    'level' => 2,
                 ])
                 ->render();
             $mpdf->WriteHTML($html);

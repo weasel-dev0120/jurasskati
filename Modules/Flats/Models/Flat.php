@@ -135,45 +135,6 @@ class Flat extends Base
     }
 
     /**
-     * Get all floor images for this apartment.
-     * Returns an array of floor image paths, ordered from first floor to last.
-     * 
-     * @return array Array of image paths, e.g., ['path/to/image1.jpg', 'path/to/image2.jpg']
-     */
-    public function getFloorImages(): array
-    {
-        $floorImages = [];
-        
-        // Always include the first floor image if it exists
-        if ($this->image && $this->image->path) {
-            $floorImages[] = $this->image->path;
-        }
-        
-        // Include second floor image if it exists
-        if ($this->has_second_floor && $this->second_image && $this->second_image->path) {
-            $floorImages[] = $this->second_image->path;
-        }
-        
-        // Future: Add support for third_image, fourth_image, etc. here
-        // Example:
-        // if ($this->has_third_floor && $this->third_image && $this->third_image->path) {
-        //     $floorImages[] = $this->third_image->path;
-        // }
-        
-        return $floorImages;
-    }
-
-    /**
-     * Get the total number of floors for this apartment.
-     * 
-     * @return int Number of floors (minimum 1)
-     */
-    public function getTotalFloors(): int
-    {
-        return count($this->getFloorImages());
-    }
-
-    /**
      * Computed label for availability – used by admin list.
      * Returns: available | on request | reserved | sold
      */

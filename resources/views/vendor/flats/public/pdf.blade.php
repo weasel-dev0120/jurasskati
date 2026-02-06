@@ -81,10 +81,10 @@
                 <td>Nr.</td>
                 <td align="right" class="number">{{ $model->number }}</td>
             </tr>
-            @if (isset($totalFloors) && $totalFloors > 1)
+            @if ($model->has_second_floor)
             <tr class="level-row">
                 <td>@lang('level')</td>
-                <td align="right" class="level">{{ $level }} / {{ $totalFloors }}</td>
+                <td align="right" class="level">{{ $level }} @lang('of 2')</td>
             </tr>
             @endif
             <tr>
