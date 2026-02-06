@@ -5,7 +5,7 @@
     <title></title>
     <style type="text/css">
         body {
-            background-color: #F0F0F0;
+            background-color: #F5F5F5;
         }
         .logo {
             position: fixed;

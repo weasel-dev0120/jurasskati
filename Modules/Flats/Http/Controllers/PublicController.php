@@ -178,19 +178,14 @@ class PublicController extends BasePublicController
                                 }
                             }
                             
-                            // Save XML preserving all original attributes and colors
-                            // Use saveXML() without arguments to get full document with XML declaration
-                            $processedSvgContent = $dom->saveXML();
+                            // Save only the SVG element (no XML declaration - mPDF would render it as visible text)
+                            $processedSvgContent = $dom->saveXML($dom->documentElement);
                             
                             // Ensure we have valid SVG content
-                            // Check if it starts with <?xml or <svg
-                            if (!empty($processedSvgContent) && 
-                                strlen($processedSvgContent) > 100 && 
-                                (strpos($processedSvgContent, '<svg') !== false || strpos($processedSvgContent, '<?xml') !== false)) {
+                            if (!empty($processedSvgContent) && strlen($processedSvgContent) > 100 && strpos($processedSvgContent, '<svg') !== false) {
                                 $svgContent = $processedSvgContent;
                             } else {
-                                // Fall back to original if processed content is invalid
-                                $svgContent = $originalSvgContent;
+                                $svgContent = self::stripXmlDeclaration($originalSvgContent);
                             }
                         } else {
                             // If loading failed, use original content
@@ -199,29 +194,28 @@ class PublicController extends BasePublicController
                         
                         libxml_clear_errors();
                     } catch (\Exception $e) {
-                        // If DOMDocument processing fails, use original SVG content
-                        // This ensures the PDF generation continues even if styling fails
-                        $svgContent = $originalSvgContent;
+                        $svgContent = self::stripXmlDeclaration($originalSvgContent);
                         libxml_clear_errors();
                     }
                     
-                    // Final check: if SVG content is empty, use original
+                    // Final check: if SVG content is empty, use original (without declaration)
                     if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
-                        $svgContent = $originalSvgContent;
+                        $svgContent = self::stripXmlDeclaration($originalSvgContent);
                     }
                 } else {
-                    // If file doesn't exist, set empty content
                     $svgContent = '';
                 }
                 
                 // Ensure we have valid SVG content before rendering
                 if (empty($svgContent) || strlen(trim($svgContent)) < 100) {
-                    // Try to read the file directly as fallback
                     $fallbackPath = public_path('images/floorplans/' . $floorPlan['file']);
                     if (file_exists($fallbackPath)) {
-                        $svgContent = file_get_contents($fallbackPath);
+                        $svgContent = self::stripXmlDeclaration(file_get_contents($fallbackPath));
                     }
                 }
+                
+                // Always strip XML declaration so it never appears as text in the PDF
+                $svgContent = self::stripXmlDeclaration($svgContent);
                 
                 $html = view('flats::public.pdf-floorplan')
                     ->with([
@@ -247,5 +241,17 @@ class PublicController extends BasePublicController
             // Always restore original backtrack limit
             ini_set('pcre.backtrack_limit', $originalBacktrackLimit);
         }
+    }
+
+    /**
+     * Remove XML declaration from SVG content so it is not rendered as visible text in PDF.
+     */
+    private static function stripXmlDeclaration(string $svgContent): string
+    {
+        if (empty($svgContent)) {
+            return $svgContent;
+        }
+        // Remove <?xml ... ?> declaration (any encoding variant)
+        return preg_replace('/<\?xml[^?]*\?>\s*/i', '', $svgContent);
     }
 }

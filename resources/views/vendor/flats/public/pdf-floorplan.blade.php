@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <title></title>
     <style type="text/css">
+        /* Match web viewing: light grey background */
         body {
-            background-color: #F0F0F0;
+            background-color: #F5F5F5;
         }
         .logo {
             position: fixed;
@@ -96,7 +97,8 @@
     </div>
     @endif
     <div class="plan">
-        @if (!empty($svgContent) && strlen(trim($svgContent)) > 100)
+        @if (!empty($svgContent) && strlen(trim($svgContent)) > 100 && strpos(trim($svgContent), '<svg') === 0)
+            {{-- Embed SVG without XML declaration (already stripped in controller) --}}
             <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                 {!! $svgContent !!}
             </div>
