@@ -28,6 +28,12 @@ class PublicController extends BasePublicController
     public function download($id)
     {
         $model = Flat::findOrFail($id);
+        
+        // Get locale from request segment (first segment is lang in routes like {lang}/flats/download/{id})
+        $lang = request()->segment(1);
+        if (!in_array($lang, ['lv', 'en', 'ru'])) {
+            $lang = app()->getLocale();
+        }
 
         $defaultConfig = (new \Mpdf\Config\ConfigVariables())->getDefaults();
         $fontDirs = $defaultConfig['fontDir'];
@@ -51,24 +57,72 @@ class PublicController extends BasePublicController
             'margin_right' => 10,
         ]);
 
+        // Determine building type and floor plans
+        $isApartment = $model->type === 'apartment';
+        $floorPlans = [];
+        
+        if ($isApartment) {
+            // Apartments: floors 1-10 (a1.svg through a10.svg)
+            for ($i = 1; $i <= 10; $i++) {
+                $floorPlans[] = [
+                    'file' => 'a' . $i . '.svg',
+                    'floor' => $i,
+                    'type' => 'apartment'
+                ];
+            }
+        } else {
+            // Lofts: floors 1-3 (l1.svg through l3.svg)
+            for ($i = 1; $i <= 3; $i++) {
+                $floorPlans[] = [
+                    'file' => 'l' . $i . '.svg',
+                    'floor' => $i,
+                    'type' => 'loft'
+                ];
+            }
+        }
+
+        // Set footer for pagination
+        $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . ($_SERVER['HTTP_HOST'] ?? '') . '</td></tr></table>');
+
+        // Add all building floor plans first
+        $firstPage = true;
+        foreach ($floorPlans as $floorPlan) {
+            if (!$firstPage) {
+                $mpdf->AddPage();
+            }
+            $firstPage = false;
+            
+            $html = view('flats::public.pdf-floorplan')
+                ->with([
+                    'floorplan' => $floorPlan['file'],
+                    'floorNumber' => $floorPlan['floor'],
+                    'type' => $floorPlan['type'],
+                    'lang' => $lang,
+                ])
+                ->render();
+            $mpdf->WriteHTML($html);
+        }
+
+        // Add apartment's own floor plan pages
+        $mpdf->AddPage();
         $html = view('flats::public.pdf')
             ->with([
                 'model' => $model,
                 'image' => $model->image->path,
                 'level' => 1,
+                'lang' => $lang,
             ])
             ->render();
         $mpdf->WriteHTML($html);
-        $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%"></td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
 
         if ($model->has_second_floor) {
-            $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
             $mpdf->AddPage();
             $html = view('flats::public.pdf')
                 ->with([
                     'model' => $model,
                     'image' => $model->second_image->path,
                     'level' => 2,
+                    'lang' => $lang,
                 ])
                 ->render();
             $mpdf->WriteHTML($html);
@@ -78,7 +132,7 @@ class PublicController extends BasePublicController
         $filename = str_replace(' ', '-', $filename);
         $filename = preg_replace('/[^A-Za-z0-9\-\_]/', '', $filename);
         $filename = preg_replace('/-+/', '-', $filename);
-        $filename = 'JurasSkati_' . $filename . '_' . config('app.locale') . '.pdf';
+        $filename = 'JurasSkati_' . $filename . '_' . $lang . '.pdf';
         return response()->streamDownload(function() use ($mpdf , $filename) {
             echo $mpdf->Output($filename, 'D');
         }, $filename);
