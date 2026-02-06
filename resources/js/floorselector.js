@@ -557,6 +557,13 @@ export default function FloorSelector() {
                     });
                     svg.setAttribute('role', 'img');
                     img.parentNode.replaceChild(svg, img);
+                    
+                    // Set up hover events for all action elements in the new SVG
+                    let actionElements = svg.querySelectorAll('.action');
+                    for (let i = 0; i < actionElements.length; i++) {
+                        setupActionEvents(actionElements[i]);
+                    }
+                    
                     markUnavailableOnFloorplans();
                 }
 

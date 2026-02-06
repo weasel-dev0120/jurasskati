@@ -51,24 +51,39 @@ class PublicController extends BasePublicController
             'margin_right' => 10,
         ]);
 
+        // Determine total number of floors
+        $totalFloors = 1;
+        if ($model->has_second_floor && $model->second_image) {
+            $totalFloors = 2;
+        }
+
+        // Set footer with page numbers if there are multiple pages
+        if ($totalFloors > 1) {
+            $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+        } else {
+            $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%"></td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+        }
+
+        // First floor
         $html = view('flats::public.pdf')
             ->with([
                 'model' => $model,
                 'image' => $model->image->path,
                 'level' => 1,
+                'totalFloors' => $totalFloors,
             ])
             ->render();
         $mpdf->WriteHTML($html);
-        $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%"></td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
 
-        if ($model->has_second_floor) {
-            $mpdf->SetHTMLFooter('<table width="100%" style="font-size: 9pt;"><tr><td width="33%"></td><td width="33%" align="center">{PAGENO} / {nbpg}</td><td align="right" width="33%">' . $_SERVER['HTTP_HOST'] . '</td></tr></table>');
+        // Second floor (if exists)
+        if ($model->has_second_floor && $model->second_image) {
             $mpdf->AddPage();
             $html = view('flats::public.pdf')
                 ->with([
                     'model' => $model,
                     'image' => $model->second_image->path,
                     'level' => 2,
+                    'totalFloors' => $totalFloors,
                 ])
                 ->render();
             $mpdf->WriteHTML($html);
