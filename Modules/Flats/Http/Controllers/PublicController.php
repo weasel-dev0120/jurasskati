@@ -60,6 +60,11 @@ class PublicController extends BasePublicController
                 'maragin_bottom' => 10,
                 'margin_left' => 10,
                 'margin_right' => 10,
+                'useSubstitutions' => false,
+                'simpleTables' => false,
+                'use_kwt' => true,
+                'autoScriptToLang' => true,
+                'autoLangToFont' => true,
             ]);
 
             // Determine building type and floor plans
@@ -128,40 +133,51 @@ class PublicController extends BasePublicController
                     try {
                         libxml_use_internal_errors(true);
                         $dom = new \DOMDocument();
+                        // Preserve whitespace to maintain formatting
+                        $dom->preserveWhiteSpace = true;
+                        $dom->formatOutput = false;
+                        // Load with options to preserve all attributes and formatting
                         $dom->loadXML($svgContent);
                         
-                        // Find all elements with class="bg" and add fill attribute
+                        // Find all elements with class="bg" and add fill attribute ONLY if not already set
                         $xpath = new \DOMXPath($dom);
+                        // Register default namespace
                         $xpath->registerNamespace('svg', 'http://www.w3.org/2000/svg');
                         
-                        $bgElements = $xpath->query('//*[@class="bg"]');
+                        // Query for elements containing "bg" in class attribute
+                        $bgElements = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " bg ")]');
                         foreach ($bgElements as $element) {
-                            // Check if parent has unavailable or sold class
-                            $parent = $element->parentNode;
-                            $hasUnavailable = false;
-                            $hasSold = false;
-                            
-                            while ($parent && $parent->nodeType === XML_ELEMENT_NODE) {
-                                $class = $parent->getAttribute('class');
-                                if (strpos($class, 'unavailable') !== false) {
-                                    $hasUnavailable = true;
-                                    break;
+                            // Only modify if fill attribute is not already set
+                            if (!$element->hasAttribute('fill')) {
+                                // Check if parent has unavailable or sold class
+                                $parent = $element->parentNode;
+                                $hasUnavailable = false;
+                                $hasSold = false;
+                                
+                                while ($parent && $parent->nodeType === XML_ELEMENT_NODE) {
+                                    $class = $parent->getAttribute('class');
+                                    if (strpos($class, 'unavailable') !== false) {
+                                        $hasUnavailable = true;
+                                        break;
+                                    }
+                                    if (strpos($class, 'sold') !== false) {
+                                        $hasSold = true;
+                                        break;
+                                    }
+                                    $parent = $parent->parentNode;
                                 }
-                                if (strpos($class, 'sold') !== false) {
-                                    $hasSold = true;
-                                    break;
+                                
+                                // Set fill color based on availability
+                                if ($hasUnavailable || $hasSold) {
+                                    $element->setAttribute('fill', '#979797');
+                                } else {
+                                    $element->setAttribute('fill', '#E8E8E8');
                                 }
-                                $parent = $parent->parentNode;
-                            }
-                            
-                            // Set fill color based on availability
-                            if ($hasUnavailable || $hasSold) {
-                                $element->setAttribute('fill', '#979797');
-                            } else {
-                                $element->setAttribute('fill', '#E8E8E8');
                             }
                         }
                         
+                        // Save XML preserving all original attributes and colors
+                        // Use saveXML() without arguments to get full document with XML declaration
                         $svgContent = $dom->saveXML();
                         libxml_clear_errors();
                     } catch (\Exception $e) {
