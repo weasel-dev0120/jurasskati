@@ -1,5 +1,7 @@
 <svg width="2115" height="1520" viewBox="0 0 2115 1520" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g id="ANTRESOLA">
+<g data-target="loft-l3_1" class="action apt l3-1">
+<rect class="bg" x="1539.86" y="970.765" width="114.812" height="182.075"/>
 <g id="001">
 <rect id="back" x="1539.86" y="970.765" width="114.812" height="182.075" fill="black"/>
 <g id="walls">
@@ -52,6 +54,9 @@
 <path id="Vector_34" d="M1552.87 1061.82V1042.74H1542.93L1542.93 1066.36L1554.14 1066.36V1063.03L1552.87 1061.82ZM1552.87 1061.82L1558.62 1067.27M1552.87 1061.82V1020.04M1552.87 1061.82L1558.61 1061.82L1558.62 1067.27M1552.87 1020.04V1039.11L1542.93 1039.11L1542.93 1015.5H1554.14V1018.82L1552.87 1020.04ZM1552.87 1020.04L1558.61 1014.59M1552.87 1020.04L1558.61 1020.04V1014.59M1558.62 1067.27L1603.84 1067.27V1014.59L1558.61 1014.59M1604.8 1013.67V1068.18L1541.02 1068.18L1541.02 1013.67L1604.8 1013.67Z" stroke="#B1B1B1" stroke-width="0.579856" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_2" class="action apt l3-2">
+<rect class="bg" x="1539.86" y="773.614" width="114.812" height="185.554"/>
 <g id="02">
 <rect id="back_2" x="1539.86" y="773.614" width="114.812" height="185.554" fill="black"/>
 <g id="walls_2">
@@ -110,6 +115,9 @@
 <path id="Vector_68" d="M1546.4 817.057L1539.86 817.057" stroke="#B1B1B1" stroke-width="0.579856" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_4" class="action apt l3-4">
+<rect class="bg" x="1539.86" y="576.463" width="114.812" height="185.554"/>
 <g id="03">
 <rect id="back_3" x="1539.86" y="576.463" width="114.812" height="185.554" fill="black"/>
 <g id="walls_3">
@@ -172,6 +180,9 @@
 <path id="Vector 692" d="M1587.41 742.882V752.74M1587.41 742.882H1566.53M1587.41 742.882L1566.53 752.74M1587.41 752.74H1566.53M1587.41 752.74L1566.53 742.882M1566.53 752.74V742.882" stroke="#B1B1B1" stroke-width="0.579856"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_5" class="action apt l3-5">
+<rect class="bg" x="1539.86" y="385.111" width="118.311" height="179.755"/>
 <g id="04">
 <path id="back_4" d="M1539.86 385.111L1658.15 385.111V413.524H1688.88V466.291H1654.67V564.866H1539.86V385.111Z" fill="black"/>
 <g id="walls_4">
@@ -237,7 +248,10 @@
 <path id="Rectangle 2724" d="M1658.79 438.458C1658.91 436.909 1659.16 435.525 1659.4 434.497C1659.6 433.584 1658.92 432.659 1657.98 432.659C1657.71 432.659 1657.45 432.743 1657.28 432.958C1656.79 433.6 1655.83 435.458 1655.83 440.197C1655.83 444.937 1656.79 446.795 1657.28 447.437C1657.45 447.651 1657.71 447.735 1657.98 447.735C1658.92 447.735 1659.6 446.811 1659.4 445.898C1659.08 444.498 1658.73 442.436 1658.73 440.197C1658.73 439.602 1658.75 439.019 1658.79 438.458ZM1658.79 438.458H1657.57C1657.25 438.458 1656.99 438.717 1656.99 439.037M1658.73 441.937H1657.57C1657.25 441.937 1656.99 441.677 1656.99 441.357M1656.99 439.037V441.357M1656.99 439.037H1653.51C1652.87 439.037 1652.35 439.557 1652.35 440.197C1652.35 440.838 1652.87 441.357 1653.51 441.357H1656.99" stroke="#B1B1B1" stroke-width="0.579856"/>
 </g>
 </g>
-<g id="05">
+</g>
+<g data-target="loft-l3_9" class="action apt l3-9">
+<rect class="bg" x="1129.32" y="1028.75" width="207.588" height="111.332"/>
+<g id="09">
 <rect id="background" x="1734.69" y="348" width="198.311" height="113.652" fill="black"/>
 <g id="walls_5">
 <path id="Rectangle 2726" d="M1717.29 375.833H1734.69V479.047H1717.29V375.833Z" fill="#4A4E54"/>
@@ -276,6 +290,9 @@
 <path id="Vector_142" d="M1190.78 1135.85L1190.78 1172.56C1168.08 1172.56 1158.31 1154.21 1158.31 1135.44" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_10" class="action apt l3-10">
+<rect class="bg" x="1230.21" y="858.273" width="106.694" height="170.478"/>
 <g id="10">
 <rect id="back_6" x="1230.21" y="858.273" width="106.694" height="170.478" fill="black"/>
 <g id="walls_7">
@@ -299,6 +316,9 @@
 <path id="Vector_143" d="M1291.68 927.039L1291.68 958.009C1270.6 958.009 1261.52 942.528 1261.52 926.696" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_12" class="action apt l3-12">
+<rect class="bg" x="1229.05" y="511.519" width="107.853" height="166.999"/>
 <g id="12">
 <rect id="back_7" x="1229.05" y="511.519" width="107.853" height="166.999" fill="black"/>
 <g id="walls_8">
@@ -319,6 +339,9 @@
 <path id="Vector_144" d="M1292.84 610.899L1292.84 578.783C1273.38 578.783 1265 594.837 1265 611.255" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_13" class="action apt l3-13">
+<rect class="bg" x="1208.18" y="352.639" width="128.728" height="151.922"/>
 <g id="013">
 <rect id="back_8" x="1208.18" y="352.639" width="128.728" height="151.922" fill="black"/>
 <g id="walls_9">
@@ -340,6 +363,9 @@
 <path id="Vector_145" d="M1209.68 397.868L1240.65 397.868C1240.65 418.944 1225.17 428.02 1209.34 428.02" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
 </g>
 </g>
+</g>
+<g data-target="loft-l3_11" class="action apt l3-11">
+<rect class="bg" x="1229.05" y="685.476" width="107.853" height="172.797"/>
 <g id="011">
 <rect id="back_9" x="1229.05" y="685.476" width="107.853" height="172.797" fill="black"/>
 <g id="walls_10">
@@ -362,6 +388,7 @@
 </g>
 <g id="other_9">
 <path id="Vector_146" d="M1293.51 758.538L1293.51 788.691C1274.66 788.691 1264.51 773.952 1264.51 758.538" stroke="#B1B1B1" stroke-width="1.15971" stroke-miterlimit="10"/>
+</g>
 </g>
 </g>
 </g>
